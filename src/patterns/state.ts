@@ -207,6 +207,7 @@
  * @module
  */
 
+import { safe } from "../index.js";
 import { type DeepReadonly, immutable } from "../types/values.js";
 
 
@@ -617,7 +618,7 @@ export function createState<T extends State<T>>(seed: Seed<T>): Instance<T> {
 
 		observers.forEach(observer => queueMicrotask(() => {
 
-			try { observer(version); } catch ( ignore ) {/**/} // !!! reconsider
+			safe(() => observer(version)); // !!! reconsider
 
 		}));
 

@@ -9,6 +9,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `safe` function executing a task and returning `undefined` if it throws, so failures the caller is prepared to ignore
+  are handled inside an expression and compose with `opt`, exported from `@metreeca/core`
 - `getIRILabel` function deriving a readable fallback label from the fragment or last path segment of an IRI, skipping
   primary topic markers and splitting camel, kebab and snake case into capitalised words (`@metreeca/core/resource`)
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import {
 	assert, eager, error,
 	isAny,
@@ -50,7 +50,8 @@ import {
 	map,
 	memo,
 	type Optional,
-	opt
+	opt,
+	safe
 } from "./index.js";
 
 
@@ -1469,6 +1470,44 @@ describe("functional idioms", () => {
 
 			});
 
+		});
+
+	});
+
+	describe("safe()", () => {
+
+		it("should return the value returned by the task", async () => {
+			expect(safe(() => "value")).toBe("value");
+		});
+
+		it("should return null as any other value", async () => {
+			expect(safe(() => null)).toBeNull();
+		});
+
+		it("should return undefined if the task throws an error", async () => {
+			expect(safe(() => error<string>(new RangeError("failed")))).toBeUndefined();
+		});
+
+		it("should return undefined if the task throws a non-error value", async () => {
+			expect(safe((): string => { throw "failed"; })).toBeUndefined();
+		});
+
+		it("should execute the task once", async () => {
+
+			const task = vi.fn(() => "value");
+
+			safe(task);
+
+			expect(task).toHaveBeenCalledTimes(1);
+
+		});
+
+		it("should pass on rejections of a returned promise", async () => {
+			await expect(safe(() => Promise.reject(new RangeError("failed")))).rejects.toThrow(RangeError);
+		});
+
+		it("should type the result as optional", async () => {
+			expectTypeOf(safe(() => "value")).toEqualTypeOf<undefined | string>();
 		});
 
 	});

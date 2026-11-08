@@ -69,7 +69,7 @@
  * @see {@link https://www.rfc-editor.org/rfc/rfc4647.html RFC 4647 - Matching of Language Tags}
  */
 
-import { assert, isString } from "../index.js";
+import { assert, isString, safe } from "../index.js";
 
 
 /**
@@ -285,14 +285,6 @@ export function matchTag(tag: Tag, range: TagRange): boolean {
  */
 export function nameTag(tag: Tag, locale: Tag = "en"): string {
 
-	try {
-
-		return new Intl.DisplayNames([locale], { type: "language" }).of(new Intl.Locale(tag).baseName) || tag;
-
-	} catch {
-
-		return tag;
-
-	}
+	return safe(() => new Intl.DisplayNames([locale], { type: "language" }).of(new Intl.Locale(tag).baseName)) || tag;
 
 }

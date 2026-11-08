@@ -154,7 +154,7 @@
  * @see {@link https://www.w3.org/TR/turtle/#sec-iri RDF 1.1 Turtle § 2.4 - IRIs}
  */
 
-import { assert, error, isString, type Optional } from "../index.js";
+import { assert, error, isString, map, type Optional, safe } from "../index.js";
 import { by, compound, descending } from "../patterns/order.js";
 
 
@@ -1015,8 +1015,8 @@ function normalize(value: unknown, variant: Variant): Optional<IRI> {
 	// path normalization (URL API silently clips excessive `..` at root)
 
 	const normalized = !validSyntax || hasAuthority ? undefined
-		: hasScheme ? parseURL(value, url => url.href)
-			: value.startsWith("/") ? parseURL(value, url => url.pathname+url.search+url.hash, "x:/")
+		: hasScheme ? safe(() => new URL(value).href)
+			: value.startsWith("/") ? safe(() => map(new URL(value, "x:/"), url => url.pathname+url.search+url.hash))
 				: value; // relative paths: keep `.` and `..` for later resolution
 
 	if ( normalized === undefined ) { return undefined; }
@@ -1033,11 +1033,6 @@ function normalize(value: unknown, variant: Variant): Optional<IRI> {
 		|| variant === "relative";
 
 	return valid ? normalized : undefined;
-
-
-	function parseURL(ref: string, extract: (url: URL) => string, base?: string): string | undefined {
-		try { return extract(new URL(ref, base)); } catch { return undefined; }
-	}
 
 }
 

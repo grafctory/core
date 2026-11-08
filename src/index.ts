@@ -19,9 +19,9 @@
  *
  * Bridges the gap between TypeScript's static type system and untrusted runtime data. Every guard returns a boolean
  * and narrows its argument on success, so validation and type inference collapse into a single call at API boundaries,
- * deserialisation sites, and other trust-crossing points. Companion utilities work along the same lines, deferring
- * values to first use, binding a value to a mapper of its own with or without a tolerance for its absence, and
- * reporting failures where a statement isn't allowed.
+ * deserialisation sites, and other trust-crossing points. Companion utilities work along the same lines: they defer
+ * values to first use, bind a value to a mapper of its own with or without a tolerance for its absence, report failures
+ * where a statement isn't allowed, and absorb failures the caller is prepared to ignore.
  *
  * ## Emptiness Guards
  *
@@ -149,12 +149,17 @@
  * outright or deferred until the value actually turns out to be missing. Definedness is about assignment rather than
  * emptiness, so `null` is mapped like any other value.
  *
+ * {@link safe} turns a failure the caller is prepared to ignore into an `undefined` value. The failure is then handled
+ * by {@link opt} like any missing value, inside the same expression and without a `try`/`catch` statement.
+ *
  * ```typescript
  * map(8080, port => `localhost:${port}`); // "localhost:8080"
  *
  * opt(ports.get(name), port => `localhost:${port}`); // string or undefined (the mapper is not called)
  * opt(ports.get(name), port => `localhost:${port}`, "localhost:80"); // string
  * opt(ports.get(name), port => `localhost:${port}`, () => probe()); // string (probed only if the port is missing)
+ *
+ * opt(safe(() => new URL(href)), url => url.host, "localhost"); // string (the fallback if href is malformed)
  * ```
  *
  * @module index
@@ -1269,5 +1274,47 @@ export function opt<V, R>(value: V, mapper: (value: Defined<V>) => R, fallback: 
 export function opt<V, R>(value: V, mapper: (value: Defined<V>) => R, fallback?: Lazy<R>): Optional<R> {
 
 	return value !== undefined ? mapper(value) : eager(fallback);
+
+}
+
+
+/**
+ * Executes a task, absorbing its failures.
+ *
+ * Turns a failure the caller is prepared to ignore into an `undefined` result, so the computation stays a single
+ * expression instead of splitting into a `try`/`catch` statement. The result composes with {@link opt}, which maps it
+ * or closes the failure case with a fallback, supplied either outright or computed only when the task fails.
+ *
+ * Any other value is returned unchanged, `null` included. A task that returns `undefined` cannot be told apart from a
+ * failed one, so absorbing failures suits only tasks whose successful results are always defined.
+ *
+ * > [!IMPORTANT]
+ * > Only synchronous failures are absorbed. A rejected promise returned by the task is passed on unchanged, and its
+ * > failure is to be handled with `.catch()` on the promise itself, or by awaiting it inside a `try`/`catch` statement.
+ *
+ * @typeParam R The type of the value returned by `task`
+ *
+ * @param task The task to execute
+ *
+ * @returns The value returned by `task`, or `undefined` if `task` throws, whatever was thrown
+ *
+ * @example
+ *
+ * ```typescript
+ * safe(() => JSON.parse(text)); // parsed value or undefined (malformed text)
+ * opt(safe(() => new URL(href)), url => url.host, "localhost"); // string (the fallback if href is malformed)
+ * ```
+ */
+export function safe<R>(task: () => R): Optional<R> {
+
+	try {
+
+		return task();
+
+	} catch {
+
+		return undefined;
+
+	}
 
 }
