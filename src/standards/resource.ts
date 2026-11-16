@@ -174,6 +174,11 @@ import { by, compound, descending } from "../patterns/order.js";
 const SchemePattern = /^[a-z][a-z0-9+.-]*:/i;
 
 /**
+ * Matches scheme followed by a non-empty authority: scheme ":" "//" 1*( any but "/" / "?" / "#" )
+ */
+const HostPattern = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]/i;
+
+/**
  * Excluded characters per RFC 3987 § 2.2: control chars, whitespace, special chars, isolated surrogates
  *
  * The `ucschar` production skips the surrogate block U+D800-U+DFFF, so no conforming IRI holds one; under unicode
@@ -243,7 +248,7 @@ export type IRI =
 /**
  * Identifier variant per RFC 3986 §§ 4.2-4.3.
  *
- * - `"browsable"`: Hierarchical with `http:` or `https:` scheme, a link a browser can open (`https://example.org/path`)
+ * - `"browsable"`: `http:` or `https:` with a host, a link a browser can open (`https://example.org/path`)
  * - `"hierarchical"`: Absolute with hierarchical path (`http://example.org/path`, `base:/path`)
  * - `"absolute"`: Contains scheme (`http://example.org/path`, `urn:example:resource`)
  * - `"internal"`: Root-relative path starting with a single `/` (`/path`)
@@ -256,6 +261,10 @@ export type IRI =
  * - The `"hierarchical"` variant requires an absolute URI with a path starting with `/`;
  *   authority is optional per RFC 3986 § 3 `hier-part` grammar (`path-absolute` alternative);
  *   reference resolution is supported per RFC 3986 § 5.2.3
+ *
+ * - The `"browsable"` and `"hierarchical"` variants are checked on the value as written rather than on its normalized
+ *   form, so `http:path`, `http:/path` and `http:///path` are neither browsable nor hierarchical even though the URL
+ *   API repairs all three into `http://path/`, turning a path segment into a host the value never named
  *
  * - The `"browsable"` and `"internal"` variants are project-specific, not formally defined in RFC 3986
  *
@@ -353,7 +362,7 @@ export type Lexicon = {
  *
  * Validates IRIs according to RFC 3987 with variant-specific rules:
  *
- * - `"browsable"`: Hierarchical with `http:` or `https:` scheme (`https://...`), a link a browser can open
+ * - `"browsable"`: `http:` or `https:` with a host (`https://host/...`), a link a browser can open
  * - `"hierarchical"`: Absolute with root-relative path (`scheme:/...`), usable as a resolution base
  * - `"absolute"`: Hierarchical or opaque (`scheme:...`)
  * - `"internal"`: Root-relative (`/...`) or absolute
@@ -1067,10 +1076,13 @@ function normalize(value: unknown, variant: Variant): Optional<IRI> {
 
 	if ( normalized === undefined ) { return undefined; }
 
-	// variant validation (hierarchy: browsable ⊂ hierarchical ⊂ absolute ⊂ internal ⊂ relative)
+	// variant validation (hierarchy: browsable ⊂ hierarchical ⊂ absolute ⊂ internal ⊂ relative); hosts are checked on the
+	// value as written, as the URL API repairs `http:/path` into `http://path/`, inventing a host the value never named
 
-	const isHierarchical = hasScheme && normalized.charAt(normalized.indexOf(":")+1) === "/";
-	const isBrowsable = isHierarchical && /^https?:/.test(normalized); // scheme lowercased by URL normalization
+	const hasHost = hasScheme && HostPattern.test(value);
+	const inventsHost = !hasHost && HostPattern.test(normalized);
+	const isHierarchical = hasScheme && value.charAt(value.indexOf(":")+1) === "/" && !inventsHost;
+	const isBrowsable = hasHost && /^https?:/i.test(value);
 	const isAbsolute = hasScheme && normalized.indexOf(":") < normalized.length-1;
 	const isInternal = isAbsolute || normalized.startsWith("/");
 

@@ -13,8 +13,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   are handled inside an expression and compose with `opt`, exported from `@metreeca/core`
 - `getIRILabel` function deriving a readable fallback label from the fragment or last path segment of an IRI, skipping
   primary topic markers and splitting camel, kebab and snake case into capitalised words (`@metreeca/core/resource`)
-- `browsable` IRI variant admitting only `http:` and `https:` IRIs, telling links a browser can open apart from
-  relative paths and from `mailto:` or `javascript:` links (`@metreeca/core/resource`)
+- `browsable` IRI variant admitting only `http:` and `https:` links naming a host as written, telling links a browser
+  can open apart from relative paths and from `mailto:` or `javascript:` links (`@metreeca/core/resource`)
 - `getIRIHost` function extracting the host of an IRI without port or user info, for compact labels of web addresses
   where the full IRI is too long to show, as in outbound link text (`@metreeca/core/resource`)
 - `summary` and `details` functions splitting markdown content into the gist taken from its leading paragraph, for
@@ -28,6 +28,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `dedent`, `text` and `markdown` template tags compute the shared margin from the literal sections alone and insert
   interpolated values verbatim, so a multi-line value no longer suppresses the dedent (`@metreeca/core/strings`)
+
+### Fixed
+
+- `hierarchical` IRI variant checking the value as written, so `isIRI` rejects `http:path`, `http:/path` and
+  `http:///path` rather than accepting the `http://path/` the URL API repairs them into (`@metreeca/core/resource`)
 
 ## [0.13.0](https://github.com/metreeca/core/compare/v0.12.1...v0.13.0) - 2026-10-17
 

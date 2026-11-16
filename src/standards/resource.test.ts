@@ -44,12 +44,16 @@ const iris = {
 			"https://example.com/", // with authority, root path
 			"base:/path", // no authority, root-relative path
 			"base:/", // no authority, root path only
-			"file:///path/to/file" // empty authority, root-relative path
+			"file:///path/to/file", // empty authority, root-relative path
+			"file:/path/to/file" // no authority, normalized to an empty one
 		],
 		invalid: [
 			{ value: "urn:example:resource", reason: "opaque URI (no root-relative path)" },
 			{ value: "mailto:user@example.com", reason: "opaque URI" },
 			{ value: "base:path", reason: "no root-relative path (path-rootless)" },
+			{ value: "http:path", reason: "no root-relative path as written, even if the URL parser repairs it" },
+			{ value: "http:/path", reason: "path the URL parser repairs into an authority" },
+			{ value: "http:///path", reason: "empty authority the URL parser fills from the path" },
 			{ value: "/path", reason: "no scheme" },
 			{ value: "path", reason: "relative reference" },
 			{ value: "http://example.com/\uD800", reason: "isolated high surrogate" }
@@ -133,6 +137,15 @@ describe("IRI", () => {
 				expect(isIRI("ftp://example.org/", "browsable")).toBe(false);
 				expect(isIRI("httpx://example.org/", "browsable")).toBe(false);
 				expect(isIRI("base:/path", "browsable")).toBe(false);
+			});
+
+			it("should return false for links naming no host as written", async () => {
+				expect(isIRI("http:path", "browsable")).toBe(false);
+				expect(isIRI("http:/path", "browsable")).toBe(false);
+				expect(isIRI("http:///path", "browsable")).toBe(false);
+				expect(isIRI("https:/", "browsable")).toBe(false);
+				expect(isIRI("https://", "browsable")).toBe(false);
+				expect(isIRI("https://?query", "browsable")).toBe(false);
 			});
 
 			it("should return false for relative references", async () => {
