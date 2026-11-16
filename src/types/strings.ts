@@ -37,6 +37,18 @@
  * `);
  * ```
  *
+ * **Summarising Markdown Content**
+ *
+ * Split markdown content into a summary taken from its leading paragraph, for listings and cards to show at a glance,
+ * and the details following it, for views presenting the full description without repeating the summary:
+ *
+ * ```typescript
+ * import { details, summary } from '@metreeca/core/strings';
+ *
+ * summary("Tags of the post.\n\nMatched ignoring case."); // "Tags of the post."
+ * details("Tags of the post.\n\nMatched ignoring case."); // "Matched ignoring case."
+ * ```
+ *
  * **Clipping Text**
  *
  * Shorten a string to a budget of code points, leaving an ellipsis to report that content was dropped, so that a value
@@ -178,6 +190,21 @@ import { error, isFunction, isString, type Optional } from "../index.js";
 
 
 /**
+ * Maximum length in code points of a summary folded from a multi-line paragraph.
+ *
+ * Bounds what {@link summary} folds from a wrapped paragraph; a single-line paragraph is taken whole, however long.
+ */
+const SummaryLength = 80;
+
+/**
+ * Matches a front matter block fenced by `---` lines and opening markdown content after any blank lines.
+ *
+ * Line terminators are expected as `\n`, so content is matched only once its line terminators are normalised.
+ */
+const FrontMatterPattern = /^(?:[ \t]*\n)*---[ \t]*\n(?:.*?\n)?---[ \t]*(?:\n|$)/su;
+
+
+/**
  * The Unicode replacement character.
  *
  * Stands in for text that denotes no character, as {@link toWellFormed} substitutes it for isolated surrogates.
@@ -310,6 +337,60 @@ export function text(template: TemplateStringsArray, ...values: unknown[]): Text
  */
 export function markdown(template: TemplateStringsArray, ...values: unknown[]): Markdown {
 	return dedent(template, ...values);
+}
+
+
+/**
+ * Extracts the summary of markdown content.
+ *
+ * Returns the leading paragraph as the gist of the content, for a listing, a tooltip or a card to show at a glance.
+ * The paragraphs following it are left to {@link details}, for readers asking for more. Content is read as follows:
+ *
+ * - Line terminators (`\r\n`, `\r`, `\n`) are normalised to `\n`
+ * - A front matter block between `---` fences at the start of the content is skipped; an unclosed fence is content
+ * - A line holding only whitespace is blank, and the first blank line closes the leading paragraph
+ * - A leading paragraph that doesn't open with a letter, such as a heading, a list item or a thematic break, isn't
+ *   prose: no summary is returned, and the paragraphs following it are never used in its place
+ * - A paragraph wrapped across several lines is folded to a single line as {@link tidy} does, then clipped to 80 code
+ *   points as {@link clip} does; a single-line paragraph is returned whole, since its length is the author's choice
+ *
+ * @param markdown The markdown content to summarise
+ *
+ * @returns The trimmed leading paragraph of `markdown`, folded and clipped if wrapped across several lines;
+ *     `undefined` if `markdown` is blank or its leading paragraph doesn't open with a letter
+ *
+ * @see {@link details} for the companion extraction, returning the content kept for readers asking for more
+ */
+export function summary(markdown: Markdown): Optional<Markdown> {
+
+	const [lead] = partition(markdown);
+
+	return !/^\p{L}/u.test(lead) ? undefined
+		: lead.includes("\n") ? clip(tidy(lead), SummaryLength)
+			: lead;
+
+}
+
+/**
+ * Extracts the details of markdown content.
+ *
+ * Returns the paragraphs following the leading one, for readers asking for more than the gist. Line terminators,
+ * front matter and blank lines are read as {@link summary} reads them. The leading paragraph is always left out, even
+ * when it has no summary, so a view showing both extractions never repeats content.
+ *
+ * @param markdown The markdown content to split
+ *
+ * @returns The trimmed paragraphs following the leading one in `markdown`, with line terminators normalised and the
+ *     breaks between paragraphs preserved; `undefined` if `markdown` holds no paragraph after the leading one
+ *
+ * @see {@link summary} for the companion extraction, returning the gist of the content
+ */
+export function details(markdown: Markdown): Optional<Markdown> {
+
+	const [, rest] = partition(markdown);
+
+	return rest || undefined;
+
 }
 
 
@@ -867,5 +948,24 @@ export function isWellFormed(string: string): boolean {
 export function toWellFormed(string: string): string {
 
 	return string.replace(/\p{Surrogate}/gu, "\uFFFD"); // unicode matching leaves well-formed pairs unmatched
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Partitions markdown content into its leading paragraph and the paragraphs following it, both trimmed.
+ */
+function partition(markdown: Markdown): readonly [lead: Markdown, rest: Markdown] {
+
+	const content = markdown
+		.replace(/\r\n?/gu, "\n")
+		.replace(FrontMatterPattern, "")
+		.trim();
+
+	const end = content.search(/\n[ \t]*\n/u); // first blank line
+
+	return end < 0 ? [content, ""] : [content.slice(0, end).trimEnd(), content.slice(end).trimStart()];
 
 }

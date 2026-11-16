@@ -13,6 +13,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   are handled inside an expression and compose with `opt`, exported from `@metreeca/core`
 - `getIRILabel` function deriving a readable fallback label from the fragment or last path segment of an IRI, skipping
   primary topic markers and splitting camel, kebab and snake case into capitalised words (`@metreeca/core/resource`)
+- `summary` and `details` functions splitting markdown content into the gist taken from its leading paragraph, for
+  listings and cards, and the paragraphs following it, for full views, skipping front matter (`@metreeca/core/strings`)
 
 ### Changed
 
