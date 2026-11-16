@@ -13,6 +13,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   are handled inside an expression and compose with `opt`, exported from `@metreeca/core`
 - `getIRILabel` function deriving a readable fallback label from the fragment or last path segment of an IRI, skipping
   primary topic markers and splitting camel, kebab and snake case into capitalised words (`@metreeca/core/resource`)
+- `browsable` IRI variant admitting only `http:` and `https:` IRIs, telling links a browser can open apart from
+  relative paths and from `mailto:` or `javascript:` links (`@metreeca/core/resource`)
+- `getIRIHost` function extracting the host of an IRI without port or user info, for compact labels of web addresses
+  where the full IRI is too long to show, as in outbound link text (`@metreeca/core/resource`)
 - `summary` and `details` functions splitting markdown content into the gist taken from its leading paragraph, for
   listings and cards, and the paragraphs following it, for full views, skipping front matter (`@metreeca/core/strings`)
 - `identifyTag` function resolving a language name written in any language to its tag, so that `German`, `tedesco`

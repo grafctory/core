@@ -17,11 +17,12 @@
 /**
  * RFC 3987 resource identifiers.
  *
- * Provides types and functions for validating resource identifiers (IRIs), checking nesting relationships and
- * navigating identifier hierarchies, deriving display labels from identifiers, resolving and rewriting references,
- * creating and inspecting namespace objects, and minting IRIs for local resources through the predefined {@link base}
- * namespace. Prefix lexicons compact IRIs to the prefixed names used in SPARQL and Turtle text, and expand those names
- * back to full IRIs, so names written against a lexicon round-trip to the identifiers they abbreviate.
+ * Provides types and functions for validating resource identifiers (IRIs), telling links a browser can open apart from
+ * other identifiers, checking nesting relationships and navigating identifier hierarchies, extracting hosts and display
+ * labels from identifiers, resolving and rewriting references, creating and inspecting namespace objects, and minting
+ * IRIs for local resources through the predefined {@link base} namespace. Prefix lexicons compact IRIs to the prefixed
+ * names used in SPARQL and Turtle text, and expand those names back to full IRIs. Names written against a lexicon
+ * round-trip to the identifiers they abbreviate, and every name a lexicon produces pastes verbatim into query text.
  *
  * **Type Guards**
  *
@@ -36,6 +37,8 @@
  *
  * // Variant-specific checks
  *
+ * isIRI("https://example.org/resource", "browsable"); // true
+ * isIRI("mailto:user@example.org", "browsable");      // false
  * isIRI("http://example.org/resource", "absolute");   // true
  * isIRI("/resource", "internal");                     // true
  * isIRI("../resource", "relative");                   // true
@@ -55,7 +58,9 @@
  * **Reference Operations**
  *
  * ```typescript
- * import { getIRIBase, getIRILabel, getIRIParent, internalize, relativize, resolve } from "@metreeca/core/resource";
+ * import {
+ *   getIRIBase, getIRIHost, getIRILabel, getIRIParent, internalize, relativize, resolve
+ * } from "@metreeca/core/resource";
  *
  * const iri = "http://example.com/a/b/c";
  *
@@ -82,6 +87,11 @@
  * getIRIParent(iri);                           // "http://example.com/a/b/"
  * getIRIParent("/a/b/");                       // "/a/"
  * getIRIParent("a");                           // "./"
+ *
+ * // Extract the host for compact display of web addresses
+ *
+ * getIRIHost(iri);                             // "example.com"
+ * getIRIHost("mailto:user@example.com");       // undefined
  *
  * // Derive a display label from the last segment
  *
@@ -233,6 +243,7 @@ export type IRI =
 /**
  * Identifier variant per RFC 3986 §§ 4.2-4.3.
  *
+ * - `"browsable"`: Hierarchical with `http:` or `https:` scheme, a link a browser can open (`https://example.org/path`)
  * - `"hierarchical"`: Absolute with hierarchical path (`http://example.org/path`, `base:/path`)
  * - `"absolute"`: Contains scheme (`http://example.org/path`, `urn:example:resource`)
  * - `"internal"`: Root-relative path starting with a single `/` (`/path`)
@@ -240,13 +251,13 @@ export type IRI =
  *
  * @remarks
  *
- * - Variants form an inclusivity hierarchy: `hierarchical ⊂ absolute ⊂ internal ⊂ relative`
+ * - Variants form an inclusivity hierarchy: `browsable ⊂ hierarchical ⊂ absolute ⊂ internal ⊂ relative`
  *
  * - The `"hierarchical"` variant requires an absolute URI with a path starting with `/`;
  *   authority is optional per RFC 3986 § 3 `hier-part` grammar (`path-absolute` alternative);
  *   reference resolution is supported per RFC 3986 § 5.2.3
  *
- * - The `"internal"` variant is project-specific, not formally defined in RFC 3986
+ * - The `"browsable"` and `"internal"` variants are project-specific, not formally defined in RFC 3986
  *
  * - No variant admits an authority supplied by a reference: references opening with `//` (network-path references per
  *   RFC 3986 § 4.2) are rejected whatever the variant
@@ -260,6 +271,7 @@ export type IRI =
  * @see {@link https://www.rfc-editor.org/rfc/rfc3986#section-4.3 RFC 3986 § 4.3 - Absolute URI}
  */
 export type Variant =
+	| "browsable"
 	| "hierarchical"
 	| "absolute"
 	| "internal"
@@ -341,7 +353,8 @@ export type Lexicon = {
  *
  * Validates IRIs according to RFC 3987 with variant-specific rules:
  *
- * - `"hierarchical"`: Absolute with root-relative path (`scheme:/...`) — can be used as resolution base
+ * - `"browsable"`: Hierarchical with `http:` or `https:` scheme (`https://...`), a link a browser can open
+ * - `"hierarchical"`: Absolute with root-relative path (`scheme:/...`), usable as a resolution base
  * - `"absolute"`: Hierarchical or opaque (`scheme:...`)
  * - `"internal"`: Root-relative (`/...`) or absolute
  * - `"relative"`: Any well-formed reference
@@ -350,8 +363,9 @@ export type Lexicon = {
  * them, so `/a/../../x` is accepted wherever the `/x` it denotes is. References opening with `//` name an authority
  * (RFC 3986 § 4.2) and are rejected whatever the variant, as no variant admits an authority supplied by a reference.
  *
- * **Excluded characters** (per RFC 3987 § 2.2): Control characters (U+0000-U+001F, U+007F-U+009F),
- * whitespace, and `< > " { } | \ ^ `` ` (backtick)
+ * **Excluded characters** (per RFC 3987 § 2.2): Control characters (U+0000-U+001F, U+007F-U+009F), whitespace, and
+ * `< > " { } | \ ^ `` ` (backtick). Text is checked as it stands, without stripping: surrounding whitespace or embedded
+ * control characters cause rejection, so values taken from user input must be trimmed before the check
  *
  * **Ill-formed text**: Strings carrying an isolated UTF-16 surrogate are rejected in every variant: the `ucschar`
  * production of RFC 3987 § 2.2 skips the surrogate block U+D800-U+DFFF, so no conforming IRI holds one, and encoding
@@ -366,8 +380,7 @@ export type Lexicon = {
  *
  * @remarks
  *
- * This function serves as a type guard, narrowing the type from `string` to {@link IRI}
- * when used in conditional checks.
+ * This function serves as a type guard, narrowing `value` to {@link IRI} when used in conditional checks.
  *
  * @see {@link IRI}
  * @see {@link Variant}
@@ -452,6 +465,7 @@ export function isNestedIRI(parent: string | IRI, child: string | IRI): boolean 
  *   isolated UTF-16 surrogate)
  *
  * @see {@link resolve} for resolving references against a base identifier
+ * @see {@link getIRIHost} for extracting the host alone, for compact display
  * @see {@link getNamespaceBase} for extracting the base identifier of a {@link Namespace}
  * @see {@link https://www.rfc-editor.org/rfc/rfc3986#section-5.1 RFC 3986 § 5.1 - Establishing a Base URI}
  */
@@ -546,6 +560,38 @@ export function getIRIParent(iri: string | IRI): Optional<IRI> {
 				: collection;
 
 	}
+
+}
+
+/**
+ * Extracts the host from an identifier.
+ *
+ * Provides a compact label for a web address where the full identifier is too long to show, as in outbound link text.
+ *
+ * @param iri The identifier to extract the host from
+ *
+ * @returns The host of `iri` in lower case, without port or user info and with internationalized names kept readable
+ *   rather than punycode-encoded, or `undefined` if `iri` names no host, as for opaque identifiers such as `mailto:`
+ *   addresses and `urn:` names, for relative references, and for text that is not a valid IRI
+ *
+ * @example
+ *
+ * ```typescript
+ * getIRIHost("https://www.uc.pt/en/");          // "www.uc.pt"
+ * getIRIHost("https://Example.org:8080/a");     // "example.org"
+ * getIRIHost("https://città.it/");              // "città.it"
+ * getIRIHost("http://[::1]:8080/a");            // "[::1]"
+ * getIRIHost("mailto:user@example.org");        // undefined
+ * ```
+ *
+ * @see {@link getIRIBase} for extracting the base identifier, scheme and authority included
+ */
+export function getIRIHost(iri: string | IRI): Optional<string> {
+
+	// host matched on the original text, as normalization punycode-encodes internationalized names
+
+	return normalize(iri, "hierarchical") === undefined ? undefined
+		: iri.match(/^[a-z][-+.a-z0-9]*:\/\/(?:[^/?#@]*@)?(\[[^\]/?#@]*]|[^/?#:@[\]]+)/i)?.[1]?.toLowerCase();
 
 }
 
@@ -1021,13 +1067,15 @@ function normalize(value: unknown, variant: Variant): Optional<IRI> {
 
 	if ( normalized === undefined ) { return undefined; }
 
-	// variant validation (hierarchy: hierarchical ⊂ absolute ⊂ internal ⊂ relative)
+	// variant validation (hierarchy: browsable ⊂ hierarchical ⊂ absolute ⊂ internal ⊂ relative)
 
 	const isHierarchical = hasScheme && normalized.charAt(normalized.indexOf(":")+1) === "/";
+	const isBrowsable = isHierarchical && /^https?:/.test(normalized); // scheme lowercased by URL normalization
 	const isAbsolute = hasScheme && normalized.indexOf(":") < normalized.length-1;
 	const isInternal = isAbsolute || normalized.startsWith("/");
 
-	const valid = variant === "hierarchical" && isHierarchical
+	const valid = variant === "browsable" && isBrowsable
+		|| variant === "hierarchical" && isHierarchical
 		|| variant === "absolute" && isAbsolute
 		|| variant === "internal" && isInternal
 		|| variant === "relative";

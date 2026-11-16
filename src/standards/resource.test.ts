@@ -22,6 +22,7 @@ import {
 	createNamespace,
 	expand,
 	getIRIBase,
+	getIRIHost,
 	getIRILabel,
 	getIRIParent,
 	getNamespaceBase,
@@ -117,6 +118,44 @@ describe("IRI", () => {
 
 	describe("isIRI()", () => {
 
+		describe("browsable variant", () => {
+
+			it("should return true for absolute http and https IRIs", async () => {
+				expect(isIRI("http://example.org/", "browsable")).toBe(true);
+				expect(isIRI("https://example.org/path?query#fragment", "browsable")).toBe(true);
+				expect(isIRI("HTTPS://example.org/", "browsable")).toBe(true);
+				expect(isIRI("https://example.org/città", "browsable")).toBe(true);
+			});
+
+			it("should return false for other schemes", async () => {
+				expect(isIRI("mailto:user@example.org", "browsable")).toBe(false);
+				expect(isIRI("javascript:void(0)", "browsable")).toBe(false);
+				expect(isIRI("ftp://example.org/", "browsable")).toBe(false);
+				expect(isIRI("httpx://example.org/", "browsable")).toBe(false);
+				expect(isIRI("base:/path", "browsable")).toBe(false);
+			});
+
+			it("should return false for relative references", async () => {
+				expect(isIRI("/path", "browsable")).toBe(false);
+				expect(isIRI("path", "browsable")).toBe(false);
+			});
+
+			it("should return false for malformed text", async () => {
+				expect(isIRI("", "browsable")).toBe(false);
+				expect(isIRI("not a url", "browsable")).toBe(false);
+				expect(isIRI(" https://example.org/ ", "browsable")).toBe(false);
+				expect(isIRI("https://example.org/a\tb", "browsable")).toBe(false);
+			});
+
+			it("should return false for values other than strings", async () => {
+				expect(isIRI(undefined, "browsable")).toBe(false);
+				expect(isIRI(null, "browsable")).toBe(false);
+				expect(isIRI(42, "browsable")).toBe(false);
+				expect(isIRI(new URL("https://example.org/"), "browsable")).toBe(false);
+			});
+
+		});
+
 		describe("hierarchical variant", () => {
 
 			it("should return true for absolute IRIs with root-relative path", async () => {
@@ -173,6 +212,11 @@ describe("IRI", () => {
 		});
 
 		describe("variant hierarchy", () => {
+
+			it("should validate browsable IRIs as hierarchical", async () => {
+				expect(isIRI("http://example.org/", "hierarchical")).toBe(true);
+				expect(isIRI("https://example.org/path", "hierarchical")).toBe(true);
+			});
 
 			it("should validate hierarchical IRIs as absolute", async () => {
 				iris.hierarchical.valid.forEach(value => {
@@ -577,6 +621,54 @@ describe("IRI", () => {
 
 	});
 
+	describe("getIRIHost()", () => {
+
+		it("should return the host of hierarchical IRIs", async () => {
+			expect(getIRIHost("https://www.uc.pt/en/")).toBe("www.uc.pt");
+			expect(getIRIHost("http://example.org/path?query#fragment")).toBe("example.org");
+		});
+
+		it("should drop port and user info", async () => {
+			expect(getIRIHost("http://example.org:8080/path")).toBe("example.org");
+			expect(getIRIHost("https://user:secret@example.org/")).toBe("example.org");
+		});
+
+		it("should return bracketed IPv6 literals whole", async () => {
+			expect(getIRIHost("http://[::1]/path")).toBe("[::1]");
+			expect(getIRIHost("http://[2001:db8::1]:8080/path")).toBe("[2001:db8::1]");
+			expect(getIRIHost("https://user@[::1]:443/")).toBe("[::1]");
+		});
+
+		it("should return hosts in lower case", async () => {
+			expect(getIRIHost("https://Example.ORG/")).toBe("example.org");
+			expect(getIRIHost("HTTP://WWW.Example.org:8080/path")).toBe("www.example.org");
+		});
+
+		it("should keep internationalized hosts readable", async () => {
+			expect(getIRIHost("https://città.it/")).toBe("città.it");
+			expect(getIRIHost("https://Città.it/")).toBe("città.it");
+		});
+
+		it("should return undefined for IRIs naming no host", async () => {
+			expect(getIRIHost("mailto:user@example.org")).toBeUndefined();
+			expect(getIRIHost("urn:isbn:0451450523")).toBeUndefined();
+		});
+
+		it("should return undefined for text that is no IRI", async () => {
+			expect(getIRIHost("")).toBeUndefined();
+			expect(getIRIHost("not a url")).toBeUndefined();
+			expect(getIRIHost("/path")).toBeUndefined();
+		});
+
+		it("should return undefined for malformed IRIs naming a host", async () => {
+			expect(getIRIHost("http://exa mple.org/")).toBeUndefined();
+			expect(getIRIHost("http://exa<mple.org/")).toBeUndefined();
+			expect(getIRIHost(" https://example.org/ ")).toBeUndefined();
+			expect(getIRIHost("https://example.org/a\tb")).toBeUndefined();
+		});
+
+	});
+
 	describe("getIRILabel()", () => {
 
 		it("should label a resource after the last path segment", async () => {
@@ -951,7 +1043,7 @@ describe("IRI", () => {
 			"////example.com/x"
 		];
 
-		const variants: Variant[] = ["hierarchical", "absolute", "internal", "relative"];
+		const variants: Variant[] = ["browsable", "hierarchical", "absolute", "internal", "relative"];
 
 		it("should reject network-path references in every variant", async () => {
 			references.forEach(reference => {
@@ -1010,6 +1102,7 @@ describe("IRI", () => {
 		];
 
 		const references: { variant: Variant, reference: (text: string) => string }[] = [
+			{ variant: "browsable", reference: text => `https://example.com/${text}` },
 			{ variant: "hierarchical", reference: text => `http://example.com/${text}` },
 			{ variant: "absolute", reference: text => `urn:example:${text}` },
 			{ variant: "internal", reference: text => `/path/${text}` },
