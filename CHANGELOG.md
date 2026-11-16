@@ -15,6 +15,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   primary topic markers and splitting camel, kebab and snake case into capitalised words (`@metreeca/core/resource`)
 - `summary` and `details` functions splitting markdown content into the gist taken from its leading paragraph, for
   listings and cards, and the paragraphs following it, for full views, skipping front matter (`@metreeca/core/strings`)
+- `identifyTag` function resolving a language name written in any language to its tag, so that `German`, `tedesco`
+  and `Deutsch` all identify `de`, for sources naming languages in words (`@metreeca/core/language`)
+- `inferTag` function inferring the language of a web page from the query parameters, path segments or file name of
+  its address, telling apart the localised versions of a page (`@metreeca/core/language`)
 
 ### Changed
 

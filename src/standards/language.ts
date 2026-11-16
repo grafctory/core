@@ -15,7 +15,7 @@
  */
 
 /**
- * BCP 47 language tags and RFC 4647 basic language ranges.
+ * BCP 47 language tags and RFC 4647 basic language ranges, with language detection from names and web addresses.
  *
  * **Language Tags**
  *
@@ -62,6 +62,28 @@
  * nameTag("zh-Hans", "it");  // "cinese semplificato" - named in Italian
  * ```
  *
+ * **Identifying**
+ *
+ * Read the language of records that name it in words rather than in tags, whatever language the name is written in:
+ *
+ * ```typescript
+ * import { identifyTag } from "@metreeca/core/language";
+ *
+ * identifyTag("German");   // "de"
+ * identifyTag("tedesco");  // "de" - named in Italian
+ * ```
+ *
+ * **Inferring**
+ *
+ * Tell apart the localised versions of a web page by the language its address states:
+ *
+ * ```typescript
+ * import { inferTag } from "@metreeca/core/language";
+ *
+ * inferTag("https://example.org/en/");               // "en"
+ * inferTag("https://example.org/page.php?lang=de");  // "de"
+ * ```
+ *
  * @module
  *
  * @see {@link https://www.rfc-editor.org/info/bcp47 BCP 47 - Tags for Identifying Languages}
@@ -69,7 +91,9 @@
  * @see {@link https://www.rfc-editor.org/rfc/rfc4647.html RFC 4647 - Matching of Language Tags}
  */
 
-import { assert, isString, safe } from "../index.js";
+import { assert, isString, lazy, opt, type Optional, safe, type URLLike } from "../index.js";
+import { immutable } from "../types/values.js";
+
 
 
 /**
@@ -124,6 +148,46 @@ export const TagPattern = (() => {
  * @see {@link https://www.rfc-editor.org/rfc/rfc4647.html RFC 4647 - Matching of Language Tags}
  */
 export const TagRangePattern = /^(?:[a-zA-Z]{1,8}(?:-[a-zA-Z0-9]{1,8})*|\*)$/;
+
+
+/**
+ * The query parameters stating the language of a page.
+ */
+const QueryParameters = immutable(["lang", "language", "locale", "lng", "hl"]);
+
+/**
+ * The ISO 639-2 special-purpose codes, which the runtime may name although they identify no language.
+ */
+const SpecialCodes = immutable(["mis", "mul", "und", "zxx"]);
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * The English language names supplied by the runtime, used to tell known language codes from unknown ones.
+ */
+const english = lazy(() => new Intl.DisplayNames(["en"], { type: "language", fallback: "none" }));
+
+/**
+ * The ISO 639-1 tags of the languages the runtime can name, leaving out deprecated aliases such as `iw` for `he`.
+ */
+const tags = lazy((): readonly Tag[] => {
+
+	const letters = [..."abcdefghijklmnopqrstuvwxyz"];
+
+	return letters
+		.flatMap(first => letters.map(second => `${first}${second}`))
+		.filter(tag => Intl.getCanonicalLocales(tag)[0] === tag && english().of(tag) !== undefined);
+
+});
+
+/**
+ * The normalised names of the languages in {@link tags}, in every locale for which the runtime supplies its own names.
+ */
+const names = lazy(() => Intl.DisplayNames.supportedLocalesOf(tags())
+	.map(locale => new Intl.DisplayNames([locale], { type: "language", fallback: "none" }))
+	.flatMap(display => tags().flatMap(tag => opt(display.of(tag), label => [{ label: normalize(label), tag }], [])))
+);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -282,9 +346,133 @@ export function matchTag(tag: Tag, range: TagRange): boolean {
  *
  * @returns The name of the language identified by `tag`, given in the language identified by `locale`, or `tag` as it
  * stands if either tag isn't well-formed or no name is available
+ *
+ * @see {@link identifyTag} for the converse, identifying the language a name refers to
  */
 export function nameTag(tag: Tag, locale: Tag = "en"): string {
 
 	return safe(() => new Intl.DisplayNames([locale], { type: "language" }).of(new Intl.Locale(tag).baseName)) || tag;
 
+}
+
+/**
+ * Identifies the language a name refers to.
+ *
+ * Resolves languages named in words rather than in tags, whatever language the name is written in: `German`,
+ * `tedesco`, `Deutsch` and `allemand` all identify `de`. Names are matched ignoring case, accents and surrounding
+ * whitespace. A name that different locales give to different languages, as `Akan`, identifies none of them: an
+ * ambiguous name is never resolved by a guess the caller could mistake for a reliable match.
+ *
+ * > [!IMPORTANT]
+ * > Names are supplied by the JavaScript runtime: the names recognised vary with the platform, and only languages with
+ * > a two-letter ISO 639-1 code are identified, so that `Hawaiian`, coded `haw` alone, identifies nothing.
+ *
+ * @param name The name of the language, written in any language
+ *
+ * @returns The ISO 639-1 tag of the language `name` refers to, or `undefined` if `name` refers to no language the
+ * runtime knows, or to more than one language in the different locales it is written in
+ *
+ * @example
+ *
+ * ```typescript
+ * import { identifyTag } from "@metreeca/core/language";
+ *
+ * identifyTag("German");    // "de"
+ * identifyTag("Français");  // "fr"
+ * identifyTag("francais");  // "fr" - accents ignored
+ * identifyTag("de");        // undefined - a tag, not a name
+ * ```
+ *
+ * @see {@link nameTag} for the converse, naming the language a tag identifies
+ */
+export function identifyTag(name: string): Optional<Tag> {
+
+	const key = normalize(name);
+	const matches = names().filter(({ label }) => label === key).map(({ tag }) => tag);
+
+	return matches.every(tag => tag === matches[0]) ? matches[0] : undefined;
+
+}
+
+/**
+ * Infers the language of a web page from its address.
+ *
+ * Tells apart the localised versions of a page published on the same site, as `https://example.org/en/` and
+ * `https://example.org/pt`, which share a host and differ only in the language their address states. The language is
+ * read from the first of the following parts of the address that states one, ignoring any later ones:
+ *
+ * - a `lang`, `language`, `locale`, `lng` or `hl` query parameter holding a two- or three-letter code, as in
+ *   `?lang=en` or `?lang=fil`, or a language name in any language, as in `?lang=English` or `?lang=Inglese`
+ * - a path segment holding a two-letter code, with an optional region, as in `/en/`, `/en-gb/` or `/courses/EN/`
+ * - an underscore- or space-separated file name word holding a code or a name of a language with a two-letter code,
+ *   as in `home_en.htm`, `report_eng.pdf` or `Guida – Versione Inglese.pdf`, ignoring the file extension
+ *
+ * Hosts and the words of hyphenated slugs are never read, so `/universite-de-paris` isn't taken as German. Codes that
+ * identify no language, as `und` or `zxx`, are ignored. Path segments and file name words admit fewer codes to keep
+ * ordinary words from passing for languages: `/iii/`, `/mal/` and `new_report.pdf` aren't read as Sichuan Yi,
+ * Malayalam or Newari, the languages their three-letter codes would otherwise state.
+ *
+ * > [!TIP]
+ * > Restrict `languages` to the languages a site is published in to rule out codes such as `/id/` or `/my/`, which
+ * > name records and personal areas far more often than they state Indonesian or Burmese.
+ *
+ * @param url The address of the page; addresses other than absolute `http` or `https` URLs state no language
+ * @param languages The tags of the languages the page may be in, matched by base language, so that `pt-PT` admits
+ * `pt`; codes and names stating other languages are ignored, as if absent; if omitted, any language is read
+ *
+ * @returns The ISO 639-1 tag of the language `url` states, or its ISO 639-2 code if it has no two-letter tag, stripped
+ * of script and region subtags, or `undefined` if `url` states no language, or none admitted by `languages`
+ *
+ * @example
+ *
+ * ```typescript
+ * import { inferTag } from "@metreeca/core/language";
+ *
+ * inferTag("https://example.org/en/");                    // "en"
+ * inferTag("https://example.org/page.php?lang=de");       // "de"
+ * inferTag("https://example.org/home_en.htm");            // "en"
+ * inferTag("https://example.org/id/1234");                // "id"
+ * inferTag("https://example.org/id/1234", ["en", "fr"]);  // undefined - Indonesian not admitted
+ * inferTag("https://www.example.de/");                    // undefined - hosts never read
+ * ```
+ *
+ * @see {@link identifyTag} for reading languages named in words
+ */
+export function inferTag(url: URLLike, languages?: readonly Tag[]): Optional<Tag> {
+
+	const parsed = opt(safe(() => new URL(url)), parsed => /^https?:$/.test(parsed.protocol) ? parsed : undefined);
+	const path = parsed?.pathname ?? "";
+
+	const segments = (safe(() => decodeURIComponent(path)) ?? path).split("/");
+	const file = segments.at(-1)?.match(/^(.+)\.[a-z0-9]+$/i)?.[1] ?? "";
+
+	const targets = languages?.map(language => safe(() => new Intl.Locale(language).language) ?? language);
+
+	return parsed === undefined ? undefined : [
+		...QueryParameters.map(name => language(parsed.searchParams.get(name) ?? "")),
+		...segments.filter(segment => /^[a-z]{2}(?:[-_][a-z]{2})?$/i.test(segment)).map(language),
+		...file.split(/[_\s]+/).map(language).map(tag => tag?.length === 2 ? tag : undefined)
+	].find(tag => tag !== undefined && (targets === undefined || targets.includes(tag)));
+
+
+	function language(value: string): Optional<Tag> {
+
+		const code = safe(() => new Intl.Locale(value.replaceAll("_", "-")).language);
+
+		return code !== undefined && !SpecialCodes.includes(code) && english().of(code) !== undefined ? code
+			: value.length > 3 ? identifyTag(value)
+				: undefined;
+
+	}
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Normalises a language name for lookup, ignoring case, accents and surrounding whitespace.
+ */
+function normalize(name: string): string {
+	return name.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }

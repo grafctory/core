@@ -20,28 +20,28 @@ npm install @metreeca/core
 
 # Usage
 
-| Module                              | Description                             |
-|-------------------------------------|-----------------------------------------|
-| [@metreeca/core][core]              | Core types, guards, and utilities       |
-| **Built-in Types**                  |                                         |
-| [@metreeca/core/values][values]     | General-purpose value operations        |
-| [@metreeca/core/numbers][numbers]   | General-purpose number operations       |
-| [@metreeca/core/strings][strings]   | General-purpose string operations       |
-| [@metreeca/core/arrays][arrays]     | General-purpose array operations        |
-| **Runtime Services**                |                                         |
-| [@metreeca/core/async][async]       | Asynchronous execution                  |
-| [@metreeca/core/scope][scope]       | Unique value allocation                 |
-| [@metreeca/core/bucket][bucket]     | Bulk content storage                    |
-| **Functional Patterns**             |                                         |
-| [@metreeca/core/order][order]       | Composable comparison functions         |
-| [@metreeca/core/trace][trace]       | Composable value validators             |
-| [@metreeca/core/relay][relay]       | Type-safe discriminated union switching |
-| [@metreeca/core/state][state]       | Type-safe immutable state management    |
-| **Web Standards**                   |                                         |
-| [@metreeca/core/resource][resource] | RFC 3987 resource identifiers           |
-| [@metreeca/core/language][language] | BCP 47 tags and RFC 4647 basic ranges   |
-| [@metreeca/core/datatype][datatype] | XSD 1.1 datatype identifiers            |
-| [@metreeca/core/base64][base64]     | RFC 4648 base64 encoders and decoders   |
+| Module                              | Description                                         |
+|-------------------------------------|-----------------------------------------------------|
+| [@metreeca/core][core]              | Core types, guards, and utilities                   |
+| **Built-in Types**                  |                                                     |
+| [@metreeca/core/values][values]     | General-purpose value operations                    |
+| [@metreeca/core/numbers][numbers]   | General-purpose number operations                   |
+| [@metreeca/core/strings][strings]   | General-purpose string operations                   |
+| [@metreeca/core/arrays][arrays]     | General-purpose array operations                    |
+| **Runtime Services**                |                                                     |
+| [@metreeca/core/async][async]       | Asynchronous execution                              |
+| [@metreeca/core/scope][scope]       | Unique value allocation                             |
+| [@metreeca/core/bucket][bucket]     | Bulk content storage                                |
+| **Functional Patterns**             |                                                     |
+| [@metreeca/core/order][order]       | Composable comparison functions                     |
+| [@metreeca/core/trace][trace]       | Composable value validators                         |
+| [@metreeca/core/relay][relay]       | Type-safe discriminated union switching             |
+| [@metreeca/core/state][state]       | Type-safe immutable state management                |
+| **Web Standards**                   |                                                     |
+| [@metreeca/core/resource][resource] | RFC 3987 resource identifiers                       |
+| [@metreeca/core/language][language] | BCP 47 tags, RFC 4647 ranges and language detection |
+| [@metreeca/core/datatype][datatype] | XSD 1.1 datatype identifiers                        |
+| [@metreeca/core/base64][base64]     | RFC 4648 base64 encoders and decoders               |
 
 [core]: https://metreeca.github.io/core/modules.html
 
