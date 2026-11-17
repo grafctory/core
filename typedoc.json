@@ -29,13 +29,8 @@
       "URL": "https://developer.mozilla.org/docs/Web/API/URL"
     },
     "typescript": {
-      "DOMException": "https://developer.mozilla.org/docs/Web/API/DOMException",
       "Error": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error",
-      "Map": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map",
       "RangeError": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RangeError",
-      "ReferenceError": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError",
-      "TypeError": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/TypeError",
-      "URIError": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/URIError",
       "URL": "https://developer.mozilla.org/docs/Web/API/URL"
     }
   },
