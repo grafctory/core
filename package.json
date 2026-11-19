@@ -106,7 +106,7 @@
     "proof": "ush up npx typedoc --watch + ush ws --open docs"
   },
   "devDependencies": {
-    "@metreeca/rack": "^0.7.0",
+    "@metreeca/rack": "^0.8.0",
     "typedoc": "^0.28.14",
     "typescript": "^5.9.3",
     "vitest": "^4.0.13"
