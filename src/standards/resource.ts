@@ -164,7 +164,7 @@
  * @see {@link https://www.w3.org/TR/turtle/#sec-iri RDF 1.1 Turtle § 2.4 - IRIs}
  */
 
-import { assert, error, isString, map, type Optional, safe } from "../index.js";
+import { assert, error, isString, type Optional, safe } from "../index.js";
 import { by, compound, descending } from "../patterns/order.js";
 
 
@@ -423,34 +423,18 @@ export function isIRI(value: unknown, variant: Variant = "relative"): value is I
  */
 export function isNestedIRI(parent: string | IRI, child: string | IRI): boolean {
 
-	const normalizedParent = normalize(parent, "hierarchical");
-	const normalizedChild = normalize(child, "hierarchical");
+	const $parent = normalize(parent, "hierarchical");
+	const $child = normalize(child, "hierarchical");
 
-	if ( normalizedParent === undefined || normalizedChild === undefined ) {
+	if ( $parent === undefined || $child === undefined ) { return false; } else {
 
-		return false;
+		const parentURL = new URL($parent);
+		const childURL = new URL($child);
 
-	} else if ( normalizedParent === normalizedChild ) {
+		// paths are compared closed by a slash, so that nesting holds at segment boundaries only
 
-		return true;
-
-	} else {
-
-		const parentURL = new URL(normalizedParent);
-		const childURL = new URL(normalizedChild);
-
-		if ( sameOrigin(parentURL, childURL) ) {
-
-			const parentPath = parentURL.pathname.endsWith("/") ? parentURL.pathname : `${parentURL.pathname}/`;
-			const childPath = childURL.pathname.endsWith("/") ? childURL.pathname : `${childURL.pathname}/`;
-
-			return childPath.startsWith(parentPath);
-
-		} else {
-
-			return false;
-
-		}
+		return sameOrigin(parentURL, childURL)
+			&& childURL.pathname.replace(/\/?$/, "/").startsWith(parentURL.pathname.replace(/\/?$/, "/"));
 
 	}
 
@@ -480,19 +464,20 @@ export function isNestedIRI(parent: string | IRI, child: string | IRI): boolean 
  */
 export function getIRIBase(iri: string | IRI): Optional<IRI> {
 
-	const normalized = normalize(iri, "hierarchical");
+	const $iri = normalize(iri, "hierarchical");
 
-	if ( normalized === undefined ) { return undefined; } else {
+	if ( $iri === undefined ) { return undefined; } else {
 
-		const { protocol, host } = new URL(normalized);
+		const { protocol, host } = new URL($iri);
 
-		const hasAuthority = normalized.charAt(normalized.indexOf(":")+2) === "/";
+		const hasAuthority = $iri.charAt($iri.indexOf(":")+2) === "/";
 
 		return hasAuthority
 			? `${protocol}//${host}/`
 			: `${protocol}/`;
 
 	}
+
 }
 
 /**
@@ -511,8 +496,10 @@ export function getIRIBase(iri: string | IRI): Optional<IRI> {
  *   yields `../../`)
  *
  * Dot segments are resolved per RFC 3986 § 5.2.4, so `http://example.org/a/./b/../c` yields `http://example.org/a/`
- * and `a/../b` yields `./`; leading `..` segments of relative references are kept, as no base is available to absorb
- * them.
+ * and `a/../b` yields `./`; relative references keep their leading `..` segments, as no base is there to absorb them.
+ *
+ * Rooted parents whose path opens with an empty segment keep a `/.` guard, so `/a/..//b` yields `/.//` rather than a
+ * `//` that would read as a network-path reference naming an authority (RFC 3986 § 4.2).
  *
  * @param iri The reference to extract the parent from
  *
@@ -525,50 +512,25 @@ export function getIRIBase(iri: string | IRI): Optional<IRI> {
  */
 export function getIRIParent(iri: string | IRI): Optional<IRI> {
 
-	const normalized = normalize(iri, "relative");
+	const $iri = normalize(iri, "relative");
 
-	// internal references resolve against a synthetic hierarchical origin
+	const [, origin = "", path = ""] = $iri?.match(/^([a-z][a-z0-9+.-]*:(?:\/\/[^/?#]*)?)?([^?#]*)/i) ?? [];
 
-	return normalized === undefined ? undefined
-		: SchemePattern.test(normalized) ? parent(new URL(normalized))?.href
-			: normalized.startsWith("/") ? parent(new URL(normalized, "x:/"))?.pathname
-				: relative(normalized);
+	const rooted = path.startsWith("/");
 
+	// rooted paths are already free of dot segments, save for the `/.` guarding an opening empty segment, which goes
+	// with the last segment it guards; relative ones still carry them
 
-	// opaque identifiers and root paths have no enclosing collection
+	const parent = rooted ? path.replace(/[^/]*\/?$/, "").replace(/^\/\.\/$/, "/")
+		: removeDotSegments(`${path.replace(/\/$/, "")}/..`);
 
-	function parent(url: URL): Optional<URL> {
+	// opaque identifiers, root paths and empty relative paths have no enclosing collection; an empty relative parent is
+	// the current collection; RFC 3986 § 4.2: an empty first segment would read as a root-relative path, a colon in the
+	// first segment as a scheme; relative parents open with a `./` dot segment in all three cases
 
-		const { pathname } = url;
-
-		return !pathname.startsWith("/") || pathname === "/" ? undefined
-			: new URL(pathname.endsWith("/") ? ".." : ".", url);
-
-	}
-
-	// remove dot segments, retaining the leading `..` segments no base is available to absorb
-
-	function relative(value: IRI): Optional<IRI> {
-
-		const [path = ""] = value.split(/[?#]/, 1);
-
-		const collection = `${path.replace(/\/$/, "")}/..`.split("/")
-			.reduce<readonly string[]>((stack, segment) =>
-				segment === "." ? stack
-					: segment === ".." && stack.length > 0 && stack.at(-1) !== ".." ? stack.slice(0, -1)
-						: [...stack, segment], []
-			)
-			.map(segment => `${segment}/`)
-			.join("");
-
-		// an empty collection is the current one; RFC 3986 § 4.2: an empty first segment would read as a root-relative
-		// path, a colon in the first segment as a scheme; prefix a `./` dot segment in all cases
-
-		return path === "" ? undefined
-			: /^(?:$|[^/]*:|\/)/.test(collection) ? `./${collection}`
-				: collection;
-
-	}
+	return path === "" || path === "/" || origin !== "" && !rooted ? undefined
+		: rooted || !/^(?:$|[^/]*:|\/)/.test(parent) ? `${origin}${parent}`
+			: `./${parent}`;
 
 }
 
@@ -630,10 +592,11 @@ export function getIRIHost(iri: string | IRI): Optional<string> {
 export function getIRILabel(iri: string | IRI): Optional<string> {
 
 	return iri
-		.replace(/^.*?(?:[/#:]([^/#:]+))?(?:\/|#|#_|#id|#this)?$/, "$1") // last segment, past any primary topic marker
-		.replace(/([a-z0-9])([A-Z])/g, "$1 $2") // camel case
-		.replace(/[-_]+/g, " ") // kebab and snake case
-		.replace(/\b[a-z]/g, initial => initial.toUpperCase())
+			.replace(/^.*?(?:[/#:]([^/#:]+))?(?:\/|#|#_|#id|#this)?$/, "$1") // last segment, past any primary topic
+																			 // marker
+			.replace(/([a-z0-9])([A-Z])/g, "$1 $2") // camel case
+			.replace(/[-_]+/g, " ") // kebab and snake case
+			.replace(/\b[a-z]/g, initial => initial.toUpperCase())
 		|| undefined;
 
 }
@@ -671,19 +634,17 @@ export function getIRILabel(iri: string | IRI): Optional<string> {
  */
 export function resolve(base: string | IRI, reference: string | IRI): IRI {
 
-	const normalizedBase = normalize(base, "absolute") ?? invalid(base, "absolute");
-	const normalizedReference = normalize(reference, "relative") ?? invalid(reference, "relative");
+	const $base = asIRI(base, "absolute");
+	const $reference = asIRI(reference, "relative");
 
-	const baseURL = new URL(normalizedBase);
+	const baseURL = new URL($base);
 
 	const opaqueBase = !baseURL.pathname.startsWith("/");
-	const relativeReference = !SchemePattern.test(normalizedReference);
+	const relativeReference = !SchemePattern.test($reference);
 
 	return opaqueBase && relativeReference
-		? error(new RangeError(
-			`cannot resolve relative <${normalizedReference}> against non-hierarchical <${normalizedBase}>`
-		))
-		: merge(baseURL, normalizedReference).href;
+		? error(new RangeError(`cannot resolve relative <${$reference}> against non-hierarchical <${$base}>`))
+		: new URL($reference, baseURL).href;
 
 }
 
@@ -692,6 +653,9 @@ export function resolve(base: string | IRI, reference: string | IRI): IRI {
  *
  * - **Hierarchical identifiers**: Returns the root-relative path (starting with `/`) if scheme and authority match
  * - **Opaque identifiers**: Returns the scheme-specific part if schemes match
+ *
+ * A root-relative path opening with an empty segment is returned with a `/.` guard (`/.//a`), so that it cannot read
+ * as a network-path reference naming an authority and still resolves back to `reference` against `base`.
  *
  * @param base The absolute base identifier providing the scheme and authority context
  * @param reference The reference to internalize
@@ -704,17 +668,14 @@ export function resolve(base: string | IRI, reference: string | IRI): IRI {
  */
 export function internalize(base: string | IRI, reference: string | IRI): IRI {
 
-	const normalizedBase = normalize(base, "absolute") ?? invalid(base, "absolute");
-	const normalizedReference = normalize(reference, "relative") ?? invalid(reference, "relative");
-
-	const baseURL = new URL(normalizedBase);
-	const referenceURL = merge(baseURL, normalizedReference);
+	const baseURL = new URL(asIRI(base, "absolute"));
+	const referenceURL = new URL(asIRI(reference, "relative"), baseURL);
 
 	return sameOrigin(baseURL, referenceURL)
 
 		// same origin: return root-relative path (already normalized by URL API)
 
-		? referenceURL.pathname+referenceURL.search+referenceURL.hash
+		? detach(referenceURL)
 
 		// different origin: return absolute reference (already normalized by URL API)
 
@@ -730,10 +691,10 @@ export function internalize(base: string | IRI, reference: string | IRI): IRI {
  * - **Authority-less hierarchical identifiers** (`base:/…`, `file:///…`): Returns the root-relative path
  * - **Opaque identifiers**: Returns the scheme-specific part if schemes match
  *
- * The returned reference always resolves back to `reference` under RFC 3986 § 5 and under any conforming URL parser:
- * a first segment carrying a colon is prefixed with a `./` dot segment so it cannot read as a scheme, and where an
- * empty first segment would read as an authority the absolute reference is returned instead. Callers may therefore
- * resolve the result against `base` without further escaping.
+ * The returned reference always resolves back to `reference` under RFC 3986 § 5 and under any conforming URL parser,
+ * so callers may resolve it against `base` without further escaping. A first segment carrying a colon is prefixed with
+ * a `./` dot segment, so it cannot read as a scheme. Where an empty first segment would read as an authority, the
+ * absolute reference is returned instead, and root-relative paths for authority-less bases take a `/.` guard.
  *
  * @param base The absolute base identifier
  * @param reference The reference to relativize
@@ -745,34 +706,16 @@ export function internalize(base: string | IRI, reference: string | IRI): IRI {
  */
 export function relativize(base: string | IRI, reference: string | IRI): IRI {
 
-	const normalizedBase = normalize(base, "absolute") ?? invalid(base, "absolute");
-	const normalizedReference = normalize(reference, "relative") ?? invalid(reference, "relative");
+	const baseURL = new URL(asIRI(base, "absolute"));
+	const referenceURL = new URL(asIRI(reference, "relative"), baseURL);
 
-	const baseURL = new URL(normalizedBase);
-	const referenceURL = merge(baseURL, normalizedReference);
+	// different origins take the absolute reference, already normalized by the URL API; authority-less bases the
+	// root-relative path, as no path-relative reference could restore the authority
 
-	return !sameOrigin(baseURL, referenceURL) ? absolute()
-		: baseURL.host === "" ? internal()
+	return !sameOrigin(baseURL, referenceURL) ? referenceURL.href
+		: baseURL.host === "" ? detach(referenceURL)
 			: relative();
 
-
-	// different origin: return absolute reference (already normalized by URL API)
-
-	function absolute(): IRI {
-
-		return referenceURL.href;
-
-	}
-
-	// authority-less bases: return the root-relative path, as no path-relative reference could restore the authority
-
-	function internal(): IRI {
-
-		return referenceURL.pathname+referenceURL.search+referenceURL.hash;
-
-	}
-
-	// hierarchical URIs: compute relative path
 
 	function relative(): IRI {
 
@@ -791,9 +734,8 @@ export function relativize(base: string | IRI, reference: string | IRI): IRI {
 		// RFC 3986 § 4.2 — an empty first segment would read as an authority, a colon in the first segment as a
 		// scheme. Where no dot segment can disambiguate, fall back to the absolute reference.
 
-		return relativePath.startsWith("/") ? absolute()
-			: /^[^/]*:/.test(relativePath) ? `./${relativePath}${referenceURL.search}${referenceURL.hash}`
-				: relativePath+referenceURL.search+referenceURL.hash;
+		return relativePath.startsWith("/") ? referenceURL.href
+			: `${/^[^/]*:/.test(relativePath) ? "./" : ""}${relativePath}${referenceURL.search}${referenceURL.hash}`;
 
 	}
 
@@ -834,34 +776,30 @@ export function relativize(base: string | IRI, reference: string | IRI): IRI {
  */
 export function createNamespace<const T extends readonly string[]>(namespace: string | IRI, terms?: T): Namespace<T> {
 
-	const ns = asIRI(namespace, "absolute"); // validate namespace eagerly
+	if ( !isString(namespace) ) {
+		throw new TypeError("expected string");
+	}
+
+	const $namespace = asIRI(namespace, "absolute"); // validate namespace eagerly
 
 	const dictionary = Object.assign(Object.create(null), Object.fromEntries([
-		["", ns],
-		...(terms ?? []).map(term => [term, asIRI(ns+term, "absolute")])
+		["", $namespace],
+		...(terms ?? []).map(term => [term, asIRI($namespace+term, "absolute")])
 	]));
 
 	return Object.freeze(new Proxy(dictionary, {
 
 		get(target, key) {
+
 			return !isString(key) ? undefined
 				: key in target ? target[key]
-					: terms && terms.length > 0 ? error(new RangeError(`unknown term <${key}> in namespace <${ns}>`))
-						: asIRI(ns+key, "absolute");
+					: terms && terms.length > 0
+						? error(new RangeError(`unknown term <${key}> in namespace <${$namespace}>`))
+						: asIRI($namespace+key, "absolute");
+
 		}
 
 	})) as Namespace<T>;
-
-
-	function asIRI(value: string, variant: Variant = "relative"): IRI {
-
-		if ( !isString(value) ) {
-			throw new TypeError("expected string");
-		}
-
-		return normalize(value, variant) ?? invalid(value, variant);
-
-	}
 
 }
 
@@ -888,7 +826,9 @@ export function createNamespace<const T extends readonly string[]>(namespace: st
  * @see {@link getNamespaceBase}
  */
 export function getNamespaceIRI(namespace: Namespace): IRI {
+
 	return namespace[""];
+
 }
 
 /**
@@ -915,7 +855,9 @@ export function getNamespaceIRI(namespace: Namespace): IRI {
  * @see {@link getIRIBase}
  */
 export function getNamespaceBase(namespace: Namespace): Optional<IRI> {
+
 	return getIRIBase(namespace[""]);
+
 }
 
 
@@ -1045,6 +987,24 @@ export function expand(lexicon: Lexicon, name: CURIE | IRI): IRI {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Checks if two identifiers share scheme and authority.
+ *
+ * Compares the authority components directly rather than through `URL.origin`, which RFC 6454 § 4 serializes as the
+ * opaque string `"null"` for every scheme outside the WHATWG special set: identifiers differing only by authority
+ * would otherwise compare as same-origin under schemes such as `app:` and `file:`.
+ *
+ * @param base The base URL
+ * @param reference The reference URL
+ *
+ * @returns `true` if `base` and `reference` share scheme and authority; `false` otherwise
+ */
+function sameOrigin(base: URL, reference: URL): boolean {
+
+	return base.protocol === reference.protocol && base.host === reference.host;
+
+}
+
+/**
  * Validates and normalizes a reference.
  *
  * Performs syntax validation (string type, excluded characters, isolated surrogates, network-path references), path
@@ -1071,70 +1031,111 @@ function normalize(value: unknown, variant: Variant): Optional<IRI> {
 
 	const normalized = !validSyntax || hasAuthority ? undefined
 		: hasScheme ? safe(() => new URL(value).href)
-			: value.startsWith("/") ? safe(() => map(new URL(value, "x:/"), url => url.pathname+url.search+url.hash))
+			: value.startsWith("/") ? internal(value)
 				: value; // relative paths: keep `.` and `..` for later resolution
 
-	if ( normalized === undefined ) { return undefined; }
+	return normalized !== undefined && admits(normalized) ? normalized : undefined;
 
-	// variant validation (hierarchy: browsable ⊂ hierarchical ⊂ absolute ⊂ internal ⊂ relative); hosts are checked on the
-	// value as written, as the URL API repairs `http:/path` into `http://path/`, inventing a host the value never named
 
-	const hasHost = hasScheme && HostPattern.test(value);
-	const inventsHost = !hasHost && HostPattern.test(normalized);
-	const isHierarchical = hasScheme && value.charAt(value.indexOf(":")+1) === "/" && !inventsHost;
-	const isBrowsable = hasHost && /^https?:/i.test(value);
-	const isAbsolute = hasScheme && normalized.indexOf(":") < normalized.length-1;
-	const isInternal = isAbsolute || normalized.startsWith("/");
+	// variant validation (hierarchy: browsable ⊂ hierarchical ⊂ absolute ⊂ internal ⊂ relative); hosts are checked on
+	// the value as written, as the URL API repairs `http:/path` into `http://path/`, inventing a host the value never
+	// named
 
-	const valid = variant === "browsable" && isBrowsable
-		|| variant === "hierarchical" && isHierarchical
-		|| variant === "absolute" && isAbsolute
-		|| variant === "internal" && isInternal
-		|| variant === "relative";
+	function admits(normalized: IRI): boolean {
 
-	return valid ? normalized : undefined;
+		const hasHost = hasScheme && HostPattern.test(value);
+		const inventsHost = !hasHost && HostPattern.test(normalized);
+		const isHierarchical = hasScheme && value.charAt(value.indexOf(":")+1) === "/" && !inventsHost;
+		const isBrowsable = hasHost && /^https?:/i.test(value);
+		const isAbsolute = hasScheme && normalized.indexOf(":") < normalized.length-1;
+		const isInternal = isAbsolute || normalized.startsWith("/");
+
+		return variant === "browsable" && isBrowsable
+			|| variant === "hierarchical" && isHierarchical
+			|| variant === "absolute" && isAbsolute
+			|| variant === "internal" && isInternal
+			|| variant === "relative";
+
+	}
+
+	// the URL API parses no reference without a base and engines disagree on synthetic ones: root-relative references
+	// take the form it would give them inside an absolute identifier, dropping empty queries and fragments and
+	// percent-encoding the non-ASCII characters, the only ones left to encode once the excluded ones are ruled out; a
+	// path left opening with an empty segment takes a `/.` guard, as it would otherwise read as naming an authority
+
+	function internal(reference: string): IRI {
+
+		const [, path = "", query = "", fragment = ""] = reference.match(/^([^?#]*)(\?[^#]*)?(#.*)?$/) ?? [];
+		const guarded = removeDotSegments(path).replace(/^\/\//, "/.//");
+
+		return [guarded, query === "?" ? "" : query, fragment === "#" ? "" : fragment]
+			.join("")
+			.replace(/[^\x00-\x7F]+/g, encodeURIComponent);
+
+	}
 
 }
 
 /**
- * Resolves a reference against a base URL.
+ * Removes the dot segments of a path per RFC 3986 § 5.2.4.
  *
- * Aligns with standard URL API semantics: excessive `..` segments that would
- * go above root are silently clipped rather than throwing errors.
+ * Reads percent-encoded dots as dots and closes paths ending with a dot segment with a slash, as the URL API does.
  *
- * @param base The parsed base URL
- * @param reference The normalized reference string
+ * @param path The path to remove dot segments from
  *
- * @returns The resolved URL
+ * @returns The path without dot segments; `..` segments climbing above the root of a rooted path are clipped, while
+ *   those opening a relative path are retained, as no base is available to absorb them
  */
-function merge(base: URL, reference: string): URL {
-	return new URL(reference, base);
+function removeDotSegments(path: string): string {
+
+	const rooted = path.startsWith("/");
+
+	return (rooted ? "/" : "")+path.slice(rooted ? 1 : 0)
+		.replace(/(?<=^|\/)(?:\.|%2e){1,2}(?=\/|$)/gi, dots => dots.replace(/%2e/gi, "."))
+		.replace(/(?<=^|\/)\.{1,2}$/, "$&/")
+		.split("/")
+		.reduce(step, [])
+		.join("/");
+
+
+	function step(stack: readonly string[], segment: string): readonly string[] {
+
+		return segment === "." ? stack
+			: segment !== ".." ? [...stack, segment]
+				: stack.length > 0 && stack.at(-1) !== ".." ? stack.slice(0, -1)
+					: rooted ? stack
+						: [...stack, segment];
+
+	}
+
 }
 
 /**
- * Checks if two identifiers share scheme and authority.
+ * Detaches the root-relative reference of a URL from its scheme and authority.
  *
- * Compares the authority components directly rather than through `URL.origin`, which RFC 6454 § 4 serializes as the
- * opaque string `"null"` for every scheme outside the WHATWG special set: identifiers differing only by authority
- * would otherwise compare as same-origin under schemes such as `app:` and `file:`.
+ * @param url The parsed URL
  *
- * @param base The base URL
- * @param reference The reference URL
- *
- * @returns `true` if `base` and `reference` share scheme and authority; `false` otherwise
+ * @returns The path, query and fragment of `url`; a path opening with an empty segment takes a `/.` guard, as away
+ *   from its authority it would otherwise read as a network-path reference naming one
  */
-function sameOrigin(base: URL, reference: URL): boolean {
-	return base.protocol === reference.protocol && base.host === reference.host;
+function detach(url: URL): IRI {
+
+	return url.pathname.replace(/^\/\//, "/.//")+url.search+url.hash;
+
 }
 
 /**
- * Throws a RangeError for an invalid reference.
+ * Validates and normalizes a required reference.
  *
- * @param value The invalid value
- * @param variant The expected variant
+ * @param value The value to validate and normalize
+ * @param variant The identifier variant
  *
- * @returns Never (always throws)
+ * @returns The validated and normalized reference
+ *
+ * @throws {@link !RangeError RangeError} If `value` is not a valid reference of the given `variant`
  */
-function invalid(value: unknown, variant: Variant): never {
-	return error(new RangeError(`invalid ${variant} reference <${value}>`));
+function asIRI(value: unknown, variant: Variant): IRI {
+
+	return normalize(value, variant) ?? error(new RangeError(`invalid ${variant} reference <${value}>`));
+
 }

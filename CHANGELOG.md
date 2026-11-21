@@ -7,6 +7,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/metreeca/core/compare/v0.14.0...HEAD)
 
+### Fixed
+
+- Root-relative references keep their path on every engine: `isIRI`, `getIRIParent` and the other functions taking
+  them no longer return `/X:/a/` for `/a/` in Chromium on Windows, where request URLs built on them failed with 404s
+  (`@metreeca/core/resource`)
+- `internalize`, `relativize` and `getIRIParent` guard root-relative paths opening with an empty segment as `/.//a`,
+  so the result can no longer be read as a network-path reference naming an authority (`@metreeca/core/resource`)
+
 ## [0.14.0](https://github.com/metreeca/core/compare/v0.13.0...v0.14.0) - 2026-11-17
 
 ### Added

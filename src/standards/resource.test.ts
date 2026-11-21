@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	base,
 	compact,
@@ -1083,6 +1083,24 @@ describe("IRI", () => {
 			});
 		});
 
+		it("should keep internal references opening with an empty segment within the base authority", async () => {
+			const base = "http://example.com/a/b";
+
+			expect(resolve(base, "/.//example.org/x")).toBe("http://example.com//example.org/x");
+			expect(resolve(base, "/a/..//example.org/x")).toBe("http://example.com//example.org/x");
+			expect(internalize(base, "/.//example.org/x")).toBe("/.//example.org/x");
+			expect(relativize(base, "/.//example.org/x")).toBe("..//example.org/x");
+			expect(relativize("base:/a", "base:/.//example.org/x")).toBe("/.//example.org/x");
+		});
+
+		it("should keep parents opening with an empty segment from reading as network-path references", async () => {
+			expect(getIRIParent("/.//a/b")).toBe("/.//a/");
+			expect(getIRIParent("/a/..//b")).toBe("/.//");
+			expect(getIRIParent("/.//")).toBe("/");
+			expect(getIRIParent("base:/.//a")).toBe("base:/.//");
+			expect(getIRIParent("base:/.//")).toBe("base:/");
+		});
+
 	});
 
 	// RFC 3986 § 5.4.2 — the normative abnormal examples fix clipping, not rejection, as the conformant outcome for
@@ -1102,6 +1120,35 @@ describe("IRI", () => {
 		it("should accept internal references carrying climbing dot segments", async () => {
 			expect(isIRI("/../x", "internal")).toBe(true);
 			expect(isIRI("/a/../../x", "internal")).toBe(true);
+		});
+
+	});
+
+	// Chromium on Windows reads a one-letter scheme as a drive letter, rewriting `x:/` to `file:///X:/`, and the URL
+	// standard carries the drive letter of a `file:` base over to root-relative references resolved against it
+
+	describe("engines reading one-letter schemes as drive letters", () => {
+
+		const DriveURL = class extends URL {
+
+			constructor(url: string | URL, base?: string | URL) {
+				super(url, base === undefined ? base : String(base).replace(/^([a-z]):\//i, "file:///$1:/"));
+			}
+
+		};
+
+		beforeEach(() => { vi.stubGlobal("URL", DriveURL); });
+		afterEach(() => { vi.unstubAllGlobals(); });
+
+		it("should keep the path of root-relative references", async () => {
+			expect(resolve("http://example.com/x", "/universities/")).toBe("http://example.com/universities/");
+			expect(internalize("http://example.com/x", "/a/../universities/?q#f")).toBe("/universities/?q#f");
+			expect(relativize("http://example.com/x", "/universities/")).toBe("universities/");
+		});
+
+		it("should keep the path of root-relative parents", async () => {
+			expect(getIRIParent("/universities/sapienza")).toBe("/universities/");
+			expect(getIRIParent("/universities/")).toBe("/");
 		});
 
 	});
