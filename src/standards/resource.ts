@@ -593,7 +593,7 @@ export function getIRILabel(iri: string | IRI): Optional<string> {
 
 	return iri
 			.replace(/^.*?(?:[/#:]([^/#:]+))?(?:\/|#|#_|#id|#this)?$/, "$1") // last segment, past any primary topic
-																			 // marker
+			// marker
 			.replace(/([a-z0-9])([A-Z])/g, "$1 $2") // camel case
 			.replace(/[-_]+/g, " ") // kebab and snake case
 			.replace(/\b[a-z]/g, initial => initial.toUpperCase())

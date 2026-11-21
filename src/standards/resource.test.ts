@@ -1506,9 +1506,18 @@ describe("Lexicon", () => {
 
 			const iri = "https://example.org/Book";
 
-			expect(compact(createLexicon({ ex: "https://example.org/", "": "https://example.org/" }), iri)).toBe(":Book");
-			expect(compact(createLexicon({ "": "https://example.org/", ex: "https://example.org/" }), iri)).toBe(":Book");
-			expect(compact(createLexicon({ zz: "https://example.org/", aa: "https://example.org/" }), iri)).toBe("aa:Book");
+			expect(compact(createLexicon({
+				ex: "https://example.org/",
+				"": "https://example.org/"
+			}), iri)).toBe(":Book");
+			expect(compact(createLexicon({
+				"": "https://example.org/",
+				ex: "https://example.org/"
+			}), iri)).toBe(":Book");
+			expect(compact(createLexicon({
+				zz: "https://example.org/",
+				aa: "https://example.org/"
+			}), iri)).toBe("aa:Book");
 
 		});
 
