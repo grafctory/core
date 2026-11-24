@@ -23,7 +23,7 @@
  * stated slot by slot without loosening the type of any slot:
  *
  * ```typescript
- * import { type DeepReadonly, type DeepPartial } from '@metreeca/core/values';
+ * import { type DeepReadonly, type DeepPartial } from '@grafctory/core/values';
  *
  * type User = { name: string, address: { city: string } };
  *
@@ -39,7 +39,7 @@
  * Compare nested structures for structural equality:
  *
  * ```typescript
- * import { equals } from '@metreeca/core/values';
+ * import { equals } from '@grafctory/core/values';
  *
  * // Objects and arrays
  * equals({ a: [1, 2] }, { a: [1, 2] }); // true
@@ -59,7 +59,7 @@
  * Create deeply frozen clones of plain objects and arrays, leaving every other value untouched:
  *
  * ```typescript
- * import { immutable } from '@metreeca/core/values';
+ * import { immutable } from '@grafctory/core/values';
  *
  * // Objects and arrays
  * const original = { a: [1, 2, 3], b: { c: 4 } };
@@ -86,7 +86,7 @@
  * even when reached through another path or nested into a new structure:
  *
  * ```typescript
- * import { immutable } from '@metreeca/core/values';
+ * import { immutable } from '@grafctory/core/values';
  *
  * const frozen = immutable({ inner: { p: 1 } });
  *
@@ -101,8 +101,8 @@
  * Validate and freeze with optional type guards:
  *
  * ```typescript
- * import { immutable } from '@metreeca/core/values';
- * import { isObject, isString, isNumber } from '@metreeca/core';
+ * import { immutable } from '@grafctory/core/values';
+ * import { isObject, isString, isNumber } from '@grafctory/core';
  *
  * // Define a type guard
  * const isUser = (v: unknown): v is { name: string; age: number } =>
@@ -126,7 +126,7 @@
  * Attach hidden content to a frozen clone under a symbol key, retrievable only through the same symbol:
  *
  * ```typescript
- * import { immutable, seal } from '@metreeca/core/values';
+ * import { immutable, seal } from '@grafctory/core/values';
  *
  * const Meta = Symbol("meta");
  *

@@ -22,7 +22,7 @@
  * Confirm that a value carries a well-formed language tag before handing it to an API that expects one:
  *
  * ```typescript
- * import { isTag } from "@metreeca/core/language";
+ * import { isTag } from "@grafctory/core/language";
  *
  * if (isTag(value)) {
  *   // value is typed as Tag
@@ -34,7 +34,7 @@
  * Confirm in the same way that a value carries a well-formed basic language range, wildcard included:
  *
  * ```typescript
- * import { isTagRange } from "@metreeca/core/language";
+ * import { isTagRange } from "@grafctory/core/language";
  *
  * if (isTagRange(value)) {
  *   // value is typed as TagRange
@@ -46,7 +46,7 @@
  * Select the content whose language answers a request, testing a tag against the ranges a client accepts:
  *
  * ```typescript
- * import { matchTag } from "@metreeca/core/language";
+ * import { matchTag } from "@grafctory/core/language";
  *
  * matchTag("de-CH", "de");  // true - Swiss German matches German range
  * ```
@@ -56,7 +56,7 @@
  * Present a tag to readers as the name of the language it identifies, in a language they understand:
  *
  * ```typescript
- * import { nameTag } from "@metreeca/core/language";
+ * import { nameTag } from "@grafctory/core/language";
  *
  * nameTag("zh-Hans");        // "Simplified Chinese" - named in English by default
  * nameTag("zh-Hans", "it");  // "cinese semplificato" - named in Italian
@@ -67,7 +67,7 @@
  * Read the language of records that name it in words rather than in tags, whatever language the name is written in:
  *
  * ```typescript
- * import { identifyTag } from "@metreeca/core/language";
+ * import { identifyTag } from "@grafctory/core/language";
  *
  * identifyTag("German");   // "de"
  * identifyTag("tedesco");  // "de" - named in Italian
@@ -78,7 +78,7 @@
  * Tell apart the localised versions of a web page by the language its address states:
  *
  * ```typescript
- * import { inferTag } from "@metreeca/core/language";
+ * import { inferTag } from "@grafctory/core/language";
  *
  * inferTag("https://example.org/en/");               // "en"
  * inferTag("https://example.org/page.php?lang=de");  // "de"
@@ -304,7 +304,7 @@ export function isTagRange(value: unknown): value is TagRange {
  * @example
  *
  * ```typescript
- * import { matchTag } from "@metreeca/core/language";
+ * import { matchTag } from "@grafctory/core/language";
  *
  * matchTag("de-CH", "de");      // true  - de-CH has subtag prefix de
  * matchTag("de-CH", "de-CH");   // true  - exact match
@@ -375,7 +375,7 @@ export function nameTag(tag: Tag, locale: Tag = "en"): string {
  * @example
  *
  * ```typescript
- * import { identifyTag } from "@metreeca/core/language";
+ * import { identifyTag } from "@grafctory/core/language";
  *
  * identifyTag("German");    // "de"
  * identifyTag("Français");  // "fr"
@@ -426,7 +426,7 @@ export function identifyTag(name: string): Optional<Tag> {
  * @example
  *
  * ```typescript
- * import { inferTag } from "@metreeca/core/language";
+ * import { inferTag } from "@grafctory/core/language";
  *
  * inferTag("https://example.org/en/");                    // "en"
  * inferTag("https://example.org/page.php?lang=de");       // "de"

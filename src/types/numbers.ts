@@ -23,7 +23,7 @@
  * statistics, states an operation once and each call keeps the numeric type it was given:
  *
  * ```typescript
- * import { add, sub } from '@metreeca/core/numbers';
+ * import { add, sub } from '@grafctory/core/numbers';
  *
  * add(1, 2);   // 3
  * sub(1n, 2n); // -1n
@@ -38,7 +38,7 @@
  * it is a `bigint`, so that averages and shares stay in the type they were computed from:
  *
  * ```typescript
- * import { div, mul } from '@metreeca/core/numbers';
+ * import { div, mul } from '@grafctory/core/numbers';
  *
  * mul(7, 0.5); // 3.5
  * div(7, 2);   // 3.5

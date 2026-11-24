@@ -25,7 +25,7 @@
  * Accept values supplied either directly or as promises:
  *
  * ```typescript
- * import type { Awaitable } from '@metreeca/core/async';
+ * import type { Awaitable } from '@grafctory/core/async';
  *
  * async function label<T>(value: Awaitable<T>): Promise<string> {
  *   return String(await value); // Handles plain values and promises alike
@@ -37,7 +37,7 @@
  * Accept series of values supplied either synchronously or asynchronously:
  *
  * ```typescript
- * import type { Awaitables } from '@metreeca/core/async';
+ * import type { Awaitables } from '@grafctory/core/async';
  *
  * async function report<T>(values: Awaitables<T>): Promise<void> {
  *   for await (const value of values) { console.log(String(value)); } // Handles arrays and async streams alike
@@ -49,7 +49,7 @@
  * Pause execution for a specified duration:
  *
  * ```typescript
- * import { sleep } from '@metreeca/core/async';
+ * import { sleep } from '@grafctory/core/async';
  *
  * async function retry(task: () => Promise<void>) {
  *   for (let i = 0; i < 3; i++) {
@@ -68,7 +68,7 @@
  * Control execution rate with automatic backoff:
  *
  * ```typescript
- * import { createThrottle } from '@metreeca/core/async';
+ * import { createThrottle } from '@grafctory/core/async';
  *
  * const throttle = createThrottle({
  *   minimum: 100,   // At least 100ms between requests

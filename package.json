@@ -1,14 +1,14 @@
 {
-  "name": "@metreeca/core",
+  "name": "@grafctory/core",
   "version": "0.14.2",
   "description": "Essential TypeScript abstractions.",
   "keywords": [
     "typescript",
     "utilities"
   ],
-  "homepage": "https://metreeca.github.io/core/",
+  "homepage": "https://grafctory.github.io/core/",
   "bugs": {
-    "url": "https://github.com/metreeca/core/issues",
+    "url": "https://github.com/grafctory/core/issues",
     "email": "info@metreeca.com"
   },
   "license": "Apache-2.0",
@@ -19,73 +19,73 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/metreeca/core.git"
+    "url": "git+https://github.com/grafctory/core.git"
   },
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
-      "@metreeca/source": "./src/index.ts",
+      "@grafctory/source": "./src/index.ts",
       "default": "./dist/index.js"
     },
     "./values": {
-      "@metreeca/source": "./src/types/values.ts",
+      "@grafctory/source": "./src/types/values.ts",
       "default": "./dist/types/values.js"
     },
     "./numbers": {
-      "@metreeca/source": "./src/types/numbers.ts",
+      "@grafctory/source": "./src/types/numbers.ts",
       "default": "./dist/types/numbers.js"
     },
     "./strings": {
-      "@metreeca/source": "./src/types/strings.ts",
+      "@grafctory/source": "./src/types/strings.ts",
       "default": "./dist/types/strings.js"
     },
     "./arrays": {
-      "@metreeca/source": "./src/types/arrays.ts",
+      "@grafctory/source": "./src/types/arrays.ts",
       "default": "./dist/types/arrays.js"
     },
     "./async": {
-      "@metreeca/source": "./src/services/async/index.ts",
+      "@grafctory/source": "./src/services/async/index.ts",
       "default": "./dist/services/async/index.js"
     },
     "./scope": {
-      "@metreeca/source": "./src/services/scope.ts",
+      "@grafctory/source": "./src/services/scope.ts",
       "default": "./dist/services/scope.js"
     },
     "./bucket": {
-      "@metreeca/source": "./src/services/bucket.ts",
+      "@grafctory/source": "./src/services/bucket.ts",
       "default": "./dist/services/bucket.js"
     },
     "./order": {
-      "@metreeca/source": "./src/patterns/order.ts",
+      "@grafctory/source": "./src/patterns/order.ts",
       "default": "./dist/patterns/order.js"
     },
     "./trace": {
-      "@metreeca/source": "./src/patterns/trace.ts",
+      "@grafctory/source": "./src/patterns/trace.ts",
       "default": "./dist/patterns/trace.js"
     },
     "./relay": {
-      "@metreeca/source": "./src/patterns/relay.ts",
+      "@grafctory/source": "./src/patterns/relay.ts",
       "default": "./dist/patterns/relay.js"
     },
     "./state": {
-      "@metreeca/source": "./src/patterns/state.ts",
+      "@grafctory/source": "./src/patterns/state.ts",
       "default": "./dist/patterns/state.js"
     },
     "./resource": {
-      "@metreeca/source": "./src/standards/resource.ts",
+      "@grafctory/source": "./src/standards/resource.ts",
       "default": "./dist/standards/resource.js"
     },
     "./language": {
-      "@metreeca/source": "./src/standards/language.ts",
+      "@grafctory/source": "./src/standards/language.ts",
       "default": "./dist/standards/language.js"
     },
     "./datatype": {
-      "@metreeca/source": "./src/standards/datatype.ts",
+      "@grafctory/source": "./src/standards/datatype.ts",
       "default": "./dist/standards/datatype.js"
     },
     "./base64": {
-      "@metreeca/source": "./src/standards/base64.ts",
+      "@grafctory/source": "./src/standards/base64.ts",
       "default": "./dist/standards/base64.js"
     }
   },
@@ -106,7 +106,7 @@
     "proof": "ush up npx typedoc --watch + ush ws --open docs"
   },
   "devDependencies": {
-    "@metreeca/rack": "^0.8.0",
+    "@grafctory/rack": "^0.8.0",
     "typedoc": "^0.28.14",
     "typescript": "^6.0.3",
     "vitest": "^4.0.13"

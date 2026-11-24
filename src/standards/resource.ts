@@ -27,7 +27,7 @@
  * **Type Guards**
  *
  * ```typescript
- * import { isIRI } from "@metreeca/core/resource";
+ * import { isIRI } from "@grafctory/core/resource";
  *
  * const value = "http://example.org/resource";
  *
@@ -48,7 +48,7 @@
  * **Nesting Checks**
  *
  * ```typescript
- * import { isNestedIRI } from "@metreeca/core/resource";
+ * import { isNestedIRI } from "@grafctory/core/resource";
  *
  * isNestedIRI("http://example.com/a/", "http://example.com/a/b");   // true
  * isNestedIRI("http://example.com/a/", "http://example.com/a/");    // true (self-nesting)
@@ -60,7 +60,7 @@
  * ```typescript
  * import {
  *   getIRIBase, getIRIHost, getIRILabel, getIRIParent, internalize, relativize, resolve
- * } from "@metreeca/core/resource";
+ * } from "@grafctory/core/resource";
  *
  * const iri = "http://example.com/a/b/c";
  *
@@ -101,7 +101,7 @@
  * **Namespace Objects**
  *
  * ```typescript
- * import { base, createNamespace, getNamespaceBase, getNamespaceIRI } from "@metreeca/core/resource";
+ * import { base, createNamespace, getNamespaceBase, getNamespaceIRI } from "@grafctory/core/resource";
  *
  * // Closed namespace with predefined terms
  *
@@ -136,7 +136,7 @@
  * **Compact URIs**
  *
  * ```typescript
- * import { compact, createLexicon, createNamespace, expand } from "@metreeca/core/resource";
+ * import { compact, createLexicon, createNamespace, expand } from "@grafctory/core/resource";
  *
  * const lexicon = createLexicon({
  *   rdfs: "http://www.w3.org/2000/01/rdf-schema#",

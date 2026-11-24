@@ -27,7 +27,7 @@
  * Restrict numbers to integral values:
  *
  * ```typescript
- * import { integer } from '@metreeca/core/trace';
+ * import { integer } from '@grafctory/core/trace';
  *
  * integer(); // no fractional part
  * ```
@@ -37,7 +37,7 @@
  * Restrict strings by length, pattern, or whitespace:
  *
  * ```typescript
- * import { length, normalised, pattern } from '@metreeca/core/trace';
+ * import { length, normalised, pattern } from '@grafctory/core/trace';
  *
  * length(1, 100); // between 1 and 100 characters
  * pattern(/^\p{Lu}/u); // matching the pattern
@@ -50,7 +50,7 @@
  * Restrict numbers and strings alike, each compared by its own natural ordering:
  *
  * ```typescript
- * import { domain, gt, gte, lt, lte } from '@metreeca/core/trace';
+ * import { domain, gt, gte, lt, lte } from '@grafctory/core/trace';
  *
  * gt(0); // greater than 0, comparing numbers by magnitude
  * gte(0); // greater than or equal to 0
@@ -65,7 +65,7 @@
  * Restrict the array and its items in one call:
  *
  * ```typescript
- * import { all, array, length, size, values } from '@metreeca/core/trace';
+ * import { all, array, length, size, values } from '@grafctory/core/trace';
  *
  * array(length(1, 100)); // every element within bounds
  * array([length(1, 10), length(1, 100)]); // positional tuple template, matched in length
@@ -78,8 +78,8 @@
  * Restrict the object and its entries in one call:
  *
  * ```typescript
- * import { test, all, entry, keys, length, object, pass, pattern, size } from '@metreeca/core/trace';
- * import { key } from '@metreeca/core';
+ * import { test, all, entry, keys, length, object, pass, pattern, size } from '@grafctory/core/trace';
+ * import { key } from '@grafctory/core';
  *
  * object(entry([undefined, length(0, 100)])); // every entry, constrained by value
  * object(entry([pattern(/^[^_]/u)])); // every entry, constrained by key
@@ -102,7 +102,7 @@
  * illegal:
  *
  * ```typescript
- * import { test, fail } from '@metreeca/core/trace';
+ * import { test, fail } from '@grafctory/core/trace';
  *
  * test(value => value.length % 2 === 0 || ["expected an even number of characters"]);
  * test(value => value % 3 === 0 || [`expected a multiple of 3, found <${value}>`]);
@@ -118,8 +118,8 @@
  * ```typescript
  * import {
  *     all, any, fail, gte, integer, length, nullable, one, optional, pass, pattern, required, type
- * } from '@metreeca/core/trace';
- * import { isString } from '@metreeca/core';
+ * } from '@grafctory/core/trace';
+ * import { isString } from '@grafctory/core';
  *
  * pass; // accept anything: neutral to all(), absorbing to any()
  *
@@ -162,8 +162,8 @@
  * ```typescript
  * import {
  *     all, array, fail, gte, length, normalised, object, optional, pass, size, TraceError, type
- * } from '@metreeca/core/trace';
- * import { isNumber, isString, key } from '@metreeca/core';
+ * } from '@grafctory/core/trace';
+ * import { isNumber, isString, key } from '@grafctory/core';
  *
  * const validateProduct = object({
  *
@@ -313,7 +313,7 @@ export type Modal<T> =
  * Named entries with an optional wildcard entry.
  *
  * Maps names to values, optionally including a value under the {@link key} symbol, mirroring the open template accepted
- * by the `isObject` guard of `@metreeca/core`. The wildcard entry covers whatever the named entries leave out:
+ * by the `isObject` guard of `@grafctory/core`. The wildcard entry covers whatever the named entries leave out:
  * {@link object} applies it to every property its template does not name explicitly.
  *
  * @typeParam T The type of the mapped values
@@ -664,7 +664,7 @@ export function domain(values: undefined | readonly (number | string)[]): Valida
 /**
  * Constrains an array.
  *
- * Applies element-wise constraints in either of the two modes of the `isArray` guard of `@metreeca/core`:
+ * Applies element-wise constraints in either of the two modes of the `isArray` guard of `@grafctory/core`:
  *
  * - **element validator** — a single validator applied to every element in turn;
  * - **tuple template** — an array of validators applied positionally, requiring the array to match it in length.
@@ -721,7 +721,7 @@ export function array<T>(
 /**
  * Constrains an object.
  *
- * Applies property-wise constraints in either of the two modes of the `isObject` guard of `@metreeca/core`:
+ * Applies property-wise constraints in either of the two modes of the `isObject` guard of `@grafctory/core`:
  *
  * - **entry validator** — a single validator applied to every property as a `[name, value]` pair, so it may constrain
  *   property names as well as their values;
@@ -1157,7 +1157,7 @@ export function one<T>(...validators: readonly Modal<Validator<T>>[]): Validator
  *
  * `unknown` is a full validator applied to the non-matching value, free to accept it or report against it. Its default
  * rejects the value, naming the expected type read off the guard name when it follows the conventional `isX` form of
- * the `@metreeca/core` guards, for instance `isString` reporting `{type} expected <string> value`; a guard named
+ * the `@grafctory/core` guards, for instance `isString` reporting `{type} expected <string> value`; a guard named
  * otherwise, an anonymous one among them, is reported against generically.
  *
  * @typeParam T The type recognised by `guard`

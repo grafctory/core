@@ -23,7 +23,7 @@
  * realigns the literal:
  *
  * ```typescript
- * import { markdown, text, type Markdown, type Text } from '@metreeca/core/strings';
+ * import { markdown, text, type Markdown, type Text } from '@grafctory/core/strings';
  *
  * function describe(label: Text, notes: Markdown): void { }
  *
@@ -43,7 +43,7 @@
  * and the details following it, for views presenting the full description without repeating the summary:
  *
  * ```typescript
- * import { details, summary } from '@metreeca/core/strings';
+ * import { details, summary } from '@grafctory/core/strings';
  *
  * summary("Tags of the post.\n\nMatched ignoring case."); // "Tags of the post."
  * details("Tags of the post.\n\nMatched ignoring case."); // "Matched ignoring case."
@@ -55,7 +55,7 @@
  * quoted in a log entry or a diagnostic message can't overrun it:
  *
  * ```typescript
- * import { clip } from '@metreeca/core/strings';
+ * import { clip } from '@grafctory/core/strings';
  *
  * clip("a very long value", 8); // "a very …"
  * ```
@@ -67,7 +67,7 @@
  * matters:
  *
  * ```typescript
- * import { tidy } from '@metreeca/core/strings';
+ * import { tidy } from '@grafctory/core/strings';
  *
  * tidy(`
  *     one
@@ -86,7 +86,7 @@
  * separators leave behind, taking the values to be separated by whitespace or by a separator of your own:
  *
  * ```typescript
- * import { split } from '@metreeca/core/strings';
+ * import { split } from '@grafctory/core/strings';
  *
  * split("one  two\nthree");           // ["one", "two", "three"]
  * split("one, two  x ,, three", ","); // ["one", "two x", "three"]
@@ -99,7 +99,7 @@
  * placeholders unfilled for a later pass:
  *
  * ```typescript
- * import { fill } from '@metreeca/core/strings';
+ * import { fill } from '@grafctory/core/strings';
  *
  * fill("hello {name}", { name: "world" });    // "hello world"
  * fill("/search?q=%{term}", { term: "a b" }); // "/search?q=a%20b"
@@ -112,7 +112,7 @@
  * template tag:
  *
  * ```typescript
- * import { dedent } from '@metreeca/core/strings';
+ * import { dedent } from '@grafctory/core/strings';
  *
  * dedent(`
  *     one
@@ -131,7 +131,7 @@
  * target a syntax of your own by supplying the pattern that selects the characters and the short forms it defines:
  *
  * ```typescript
- * import { escape } from '@metreeca/core/strings';
+ * import { escape } from '@grafctory/core/strings';
  *
  * escape("line\nbreak"); // the break is rewritten as a two-character escape
  * escape("a\uD800b");    // the isolated surrogate is rewritten as a four-digit escape
@@ -147,7 +147,7 @@
  * rejected:
  *
  * ```typescript
- * import { unescape } from '@metreeca/core/strings';
+ * import { unescape } from '@grafctory/core/strings';
  *
  * unescape(String.raw`line\nbreak`);  // the two-character escape is read back as a line break
  * unescape(String.raw`a\U0001F600b`); // the eight-digit form is read back as the emoji
@@ -162,7 +162,7 @@
  * within one segment and `**` for a run across segments, with everything else read literally:
  *
  * ```typescript
- * import { glob } from '@metreeca/core/strings';
+ * import { glob } from '@grafctory/core/strings';
  *
  * glob("*.txt").test("notes.txt");        // true
  * glob("*.txt").test("docs/notes.txt");   // false
@@ -175,7 +175,7 @@
  * character, or replace those surrogates with the Unicode replacement character:
  *
  * ```typescript
- * import { isWellFormed, toWellFormed } from '@metreeca/core/strings';
+ * import { isWellFormed, toWellFormed } from '@grafctory/core/strings';
  *
  * isWellFormed("a😀");     // true
  * isWellFormed("a\uD800"); // false

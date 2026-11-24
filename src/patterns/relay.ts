@@ -30,7 +30,7 @@
  * Define options and match with function handlers:
  *
  * ```typescript
- * import { createRelay } from '@metreeca/core/relay';
+ * import { createRelay } from '@grafctory/core/relay';
  *
  * type FieldState = {
  *   unset: void;

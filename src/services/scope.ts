@@ -25,7 +25,7 @@
  * it to produce the value returned instead.
  *
  * ```typescript
- * import { createScope } from '@metreeca/core/scope';
+ * import { createScope } from '@grafctory/core/scope';
  *
  * const scope = createScope();
  * const node = {};

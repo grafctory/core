@@ -38,7 +38,7 @@
  * **Usage**
  *
  * ```typescript
- * import { encodeBase64, decodeBase64 } from "@metreeca/core/base64";
+ * import { encodeBase64, decodeBase64 } from "@grafctory/core/base64";
  *
  * encodeBase64("hello");       // "aGVsbG8=" — standard alphabet, `=` padding retained
  * encodeBase64(">>>");         // "Pj4+"     — standard `+` retained

@@ -46,7 +46,7 @@
  * functions:
  *
  * ```typescript
- * import { createState } from '@metreeca/core/state';
+ * import { createState } from '@grafctory/core/state';
  *
  * interface Counter {
  *

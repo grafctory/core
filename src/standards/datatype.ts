@@ -21,7 +21,7 @@
  * {@link Namespace}.
  *
  * ```typescript
- * import { xsd } from "@metreeca/core/datatype";
+ * import { xsd } from "@grafctory/core/datatype";
  *
  * // Predefined closed namespace for well-known XSD 1.1 datatypes
  *

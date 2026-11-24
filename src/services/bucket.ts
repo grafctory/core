@@ -24,7 +24,7 @@
  * Values are stored, retrieved and removed one key at a time, streaming content in and out as a whole:
  *
  * ```typescript
- * import { createMemoryBucket } from '@metreeca/core/bucket';
+ * import { createMemoryBucket } from '@grafctory/core/bucket';
  *
  * const bucket = createMemoryBucket();
  *

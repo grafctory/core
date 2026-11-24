@@ -26,7 +26,7 @@
  * Sort arrays using ascending or descending order:
  *
  * ```typescript
- * import { ascending, descending } from '@metreeca/core/order';
+ * import { ascending, descending } from '@grafctory/core/order';
  *
  * const numbers = [3, 1, 4, 1, 5];
  * numbers.sort(ascending);  // [1, 1, 3, 4, 5]
@@ -38,7 +38,7 @@
  * Extract and compare specific properties from objects:
  *
  * ```typescript
- * import { by, descending } from '@metreeca/core/order';
+ * import { by, descending } from '@grafctory/core/order';
  *
  * const users = [
  *   { name: 'Bob', age: 25 },
@@ -54,7 +54,7 @@
  * Order strings according to the collation rules of a locale:
  *
  * ```typescript
- * import { by, locale } from '@metreeca/core/order';
+ * import { by, locale } from '@grafctory/core/order';
  *
  * const users = [
  *   { name: 'Émile' },
@@ -70,7 +70,7 @@
  * without ever consulting the comparator, so the placement of undefined values holds for keys extracted with `by`:
  *
  * ```typescript
- * import { by, absent, present, ascending } from '@metreeca/core/order';
+ * import { by, absent, present, ascending } from '@grafctory/core/order';
  *
  * const items = [{ rank: 3 }, { rank: null }, { rank: 1 }, { rank: undefined }, { rank: 2 }];
  *
@@ -83,7 +83,7 @@
  * Invert an existing comparator:
  *
  * ```typescript
- * import { reverse, ascending } from '@metreeca/core/order';
+ * import { reverse, ascending } from '@grafctory/core/order';
  *
  * const numbers = [3, 1, 4, 1, 5];
  * numbers.sort(reverse(ascending)); // [5, 4, 3, 1, 1]
@@ -94,7 +94,7 @@
  * Sort by multiple properties with priority order:
  *
  * ```typescript
- * import { by, compound } from '@metreeca/core/order';
+ * import { by, compound } from '@grafctory/core/order';
  *
  * const data = [
  *   { category: 'B', priority: 2 },

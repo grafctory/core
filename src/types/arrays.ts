@@ -22,7 +22,7 @@
  * Coerce an optional, single or multi-valued input into an array for uniform iteration:
  *
  * ```typescript
- * import { some } from '@metreeca/core/arrays';
+ * import { some } from '@grafctory/core/arrays';
  *
  * some(undefined);           // []
  * some("x");                 // ["x"]
@@ -35,7 +35,7 @@
  * Keep the unique values of a collection, dropping later duplicates:
  *
  * ```typescript
- * import { unique } from '@metreeca/core/arrays';
+ * import { unique } from '@grafctory/core/arrays';
  *
  * unique([1, 1, 2, 3, 3]);      // [1, 2, 3]
  * unique(new Set([1, 2]));      // [1, 2]
@@ -47,7 +47,7 @@
  * from the first, deduplicating in every case:
  *
  * ```typescript
- * import { difference, intersection, union } from '@metreeca/core/arrays';
+ * import { difference, intersection, union } from '@grafctory/core/arrays';
  *
  * union([[1, 2], [2, 3]]);              // [1, 2, 3]
  * intersection([[1, 2, 3], [2, 3, 4]]); // [2, 3]
@@ -60,7 +60,7 @@
  * boundary when the input doesn't match:
  *
  * ```typescript
- * import { multiple, nonempty, optional, required } from '@metreeca/core/arrays';
+ * import { multiple, nonempty, optional, required } from '@grafctory/core/arrays';
  *
  * required(["x"]);      // "x"
  * required(["x", "y"]); // TypeError

@@ -1,6 +1,6 @@
 ---
 title: Project Guidelines
-description: Development guidelines and conventions for the @metreeca/core package.
+description: Development guidelines and conventions for the @grafctory/core package.
 ---
 
 # NPM Scripts
