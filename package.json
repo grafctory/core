@@ -1,6 +1,6 @@
 {
   "name": "@metreeca/core",
-  "version": "0.14.1",
+  "version": "0.14.2",
   "description": "Essential TypeScript abstractions.",
   "keywords": [
     "typescript",
