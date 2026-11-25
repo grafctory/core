@@ -10,13 +10,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/grafctory/core/compare/v0.14.2...HEAD)
 
-## [0.14.2](https://github.com/metreeca/core/compare/v0.14.1...v0.14.2) - 2026-11-24
+## [0.14.2](https://github.com/grafctory/core/compare/v0.14.1...v0.14.2) - 2026-11-24
 
 ### Changed
 
 - Maintenance release with no change to the published API or behaviour
 
-## [0.14.1](https://github.com/metreeca/core/compare/v0.14.0...v0.14.1) - 2026-11-21
+## [0.14.1](https://github.com/grafctory/core/compare/v0.14.0...v0.14.1) - 2026-11-21
 
 ### Fixed
 
@@ -26,7 +26,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `internalize`, `relativize` and `getIRIParent` guard root-relative paths opening with an empty segment as `/.//a`,
   so the result can no longer be read as a network-path reference naming an authority (`@metreeca/core/resource`)
 
-## [0.14.0](https://github.com/metreeca/core/compare/v0.13.0...v0.14.0) - 2026-11-17
+## [0.14.0](https://github.com/grafctory/core/compare/v0.13.0...v0.14.0) - 2026-11-17
 
 ### Added
 
@@ -55,7 +55,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `hierarchical` IRI variant checking the value as written, so `isIRI` rejects `http:path`, `http:/path` and
   `http:///path` rather than accepting the `http://path/` the URL API repairs them into (`@metreeca/core/resource`)
 
-## [0.13.0](https://github.com/metreeca/core/compare/v0.12.1...v0.13.0) - 2026-10-17
+## [0.13.0](https://github.com/grafctory/core/compare/v0.12.1...v0.13.0) - 2026-10-17
 
 ### Added
 
@@ -75,14 +75,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `app` namespace renamed to `base` and moved to the `base:/` origin, so the module loads in hosts that register an
   `app` scheme of their own and reject `app:` IRIs, such as Electron shells (`@metreeca/core/resource`)
 
-## [0.12.1](https://github.com/metreeca/core/compare/v0.12.0...v0.12.1) - 2026-10-14
+## [0.12.1](https://github.com/grafctory/core/compare/v0.12.0...v0.12.1) - 2026-10-14
 
 ### Changed
 
 - Published exports declare the `@metreeca/source` condition, resolving each entry point to its TypeScript source in
   checkouts linked for local development, while registry consumers keep resolving to the compiled `dist` modules
 
-## [0.12.0](https://github.com/metreeca/core/compare/v0.11.0...v0.12.0) - 2026-10-01
+## [0.12.0](https://github.com/grafctory/core/compare/v0.11.0...v0.12.0) - 2026-10-01
 
 ### Added
 
@@ -103,7 +103,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   called directly, as in `value: v => v ? v : common()`, and drop the third type argument from `Handler<V, R, D>` and
   `Handlers<O, R, D>`
 
-## [0.11.0](https://github.com/metreeca/core/compare/v0.10.0...v0.11.0) - 2026-09-24
+## [0.11.0](https://github.com/grafctory/core/compare/v0.10.0...v0.11.0) - 2026-09-24
 
 ### Added
 
@@ -146,7 +146,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   first segment carrying a colon with a `./` dot segment and falling back to the absolute reference where a relative
   one would open with an empty segment reading as an authority (`@metreeca/core/resource`)
 
-## [0.10.0](https://github.com/metreeca/core/compare/v0.9.22...v0.10.0) - 2026-09-09
+## [0.10.0](https://github.com/grafctory/core/compare/v0.9.22...v0.10.0) - 2026-09-09
 
 ### Added
 
@@ -210,7 +210,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `isLiteral` guard, whose enum-like sets are matched by testing the value against the expected primitive guard and
   looking it up in the set of accepted values (`@metreeca/core`)
 
-## [0.9.22](https://github.com/metreeca/core/compare/v0.9.21...v0.9.22) - 2026-08-28
+## [0.9.22](https://github.com/grafctory/core/compare/v0.9.21...v0.9.22) - 2026-08-28
 
 ### Added
 
@@ -225,13 +225,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   of the process, dropping them once an optional time to live elapses since their last use, or dropping the least
   recently used ones beyond an optional byte budget, exported from `@metreeca/core/bucket`
 
-## [0.9.21](https://github.com/metreeca/core/compare/v0.9.20...v0.9.21) - 2026-08-26
+## [0.9.21](https://github.com/grafctory/core/compare/v0.9.20...v0.9.21) - 2026-08-26
 
 ### Changed
 
 - Publishing and documentation workflows updated to Node.js 24 action runtimes; no library changes
 
-## [0.9.20](https://github.com/metreeca/core/compare/v0.9.19...v0.9.20) - 2026-08-26
+## [0.9.20](https://github.com/grafctory/core/compare/v0.9.19...v0.9.20) - 2026-08-26
 
 ### Added
 
@@ -304,7 +304,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `createMutex` factory and `Mutex` type; mutual exclusion is redundant for the synchronous critical sections of a
   single-threaded event loop (were exported from `@metreeca/core/async`)
 
-## [0.9.19](https://github.com/metreeca/core/compare/v0.9.18...v0.9.19) - 2026-06-20
+## [0.9.19](https://github.com/grafctory/core/compare/v0.9.18...v0.9.19) - 2026-06-20
 
 ### Added
 
@@ -365,7 +365,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `length`, `caller`)
 - `Relay` overload resolution picking partial over complete handlers
 
-## [0.9.18](https://github.com/metreeca/core/compare/v0.9.17...v0.9.18) - 2026-02-09
+## [0.9.18](https://github.com/grafctory/core/compare/v0.9.17...v0.9.18) - 2026-02-09
 
 ### Added
 
@@ -403,7 +403,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - `isScalar` type guard (use `isBoolean(v) || isNumber(v) || isString(v)` instead)
 
-## [0.9.17](https://github.com/metreeca/core/compare/v0.9.16...v0.9.17) - 2025-12-17
+## [0.9.17](https://github.com/grafctory/core/compare/v0.9.16...v0.9.17) - 2025-12-17
 
 ### Added
 
