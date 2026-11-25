@@ -1,11 +1,15 @@
 # @grafctory/core
 
-[![npm](https://img.shields.io/npm/v/@grafctory/core)](https://www.npmjs.com/package/@grafctory/core)
+[![npm][npm-badge]][npm]
+
+[npm-badge]: https://img.shields.io/npm/v/@grafctory/core
+[npm]: https://www.npmjs.com/package/@grafctory/core
+[grafctory]: https://github.com/grafctory
 
 Essential TypeScript abstractions.
 
-**@grafctory/core** is a foundational TypeScript toolkit with clean, minimalist APIs for built-in types, runtime
-services, functional patterns and web standards.
+**@grafctory/core** is the foundation module of the [Grafctory][grafctory] model-driven knowledge graph framework. It
+offers clean, minimalist APIs for built-in types, runtime services, functional patterns and web standards.
 
 # Installation
 
@@ -85,3 +89,5 @@ npm install @grafctory/core
 
 This project is licensed under the Apache 2.0 License –
 see [LICENSE](https://github.com/grafctory/core?tab=Apache-2.0-1-ov-file) file for details.
+
+<sub>Grafctory™ is a trademark of Metreeca srl.</sub>
