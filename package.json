@@ -1,6 +1,6 @@
 {
   "name": "@grafctory/core",
-  "version": "0.14.2",
+  "version": "0.14.3",
   "description": "Essential TypeScript abstractions.",
   "keywords": [
     "typescript",
